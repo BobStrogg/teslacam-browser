@@ -2,14 +2,86 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Hello World!</title>
+    <title>TeslaCam Browser</title>
+    <style>
+      html, body
+      {
+          margin: 0;
+          padding: 0;
+          width: 100%;
+          height: 100%;
+          font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .page
+      {
+        position: absolute;
+        left: 5px;
+        right: 5px;
+      }
+
+      .folders
+      {
+        height: 200px;
+        overflow-y: auto;
+      }
+
+      .folders .folder
+      {
+      }
+
+      .folders .folder.selected
+      {
+        background-color: lightsteelblue;
+      }
+
+      .folders .folder .title
+      {
+        cursor: pointer;
+      }
+
+      .videos .timespan
+      {
+      }
+
+      .videos .timespan .title
+      {
+        padding: 5px;
+        background-color: lightsteelblue;
+        cursor: pointer;
+      }
+
+      .videos .container
+      {
+          width: 100%;
+      }
+
+      .videos .container .column
+      {
+          width: calc( 100% / 3 );
+          float: left;
+      }
+
+      .videos .container .column video
+      {
+          width: 100%;
+          height: auto;
+      }
+
+      .videos .container .end
+      {
+        float: none;
+        clear: both;
+      }
+    </style>
   </head>
   <body>
-    <h1>Hello World!</h1>
-    <!-- All of the Node.js APIs are available in this renderer process. -->
-    We are using Node.js <script>document.write(process.versions.node)</script>,
-    Chromium <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
+    <div class="page">
+      <h1>TeslaCam Browser</h1>
+      <!-- All of the Node.js APIs are available in this renderer process. -->
+      <div id="folders" class="folders"></div>
+      <div id="videos" class="videos"></div>
+    </div>
 
     <script>
       // You can also require other files to run in this process
