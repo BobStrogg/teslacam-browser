@@ -1,5 +1,6 @@
 {
   "name": "teslacam-browser",
+  "productName": "TeslaCam Browser",
   "version": "0.0.1",
   "description": "A minimal TeslaCam Browser",
   "main": "main.js",
@@ -50,6 +51,7 @@
   },
   "dependencies": {
     "buffer-alloc-unsafe": "^1.1.0",
+    "flatpickr": "^4.5.7",
     "yarn": "^1.15.2"
   }
 }
