@@ -6,55 +6,21 @@ const os = require( "os" )
 const fs = require( "fs" )
 const path = require( "path" )
 const flatpickr = require( "flatpickr" )
-const regexHelpers = require( "./regex-helpers" )
+const helpers = require( "./renderer-helpers" )
 const { dialog } = require( "electron" ).remote
+
+var openButton = document.getElementById( "openButton" )
+
+openButton.addEventListener( "click", ( e, ev ) => ipcRenderer.send( "selectFolders" ) )
+
+var calendar = document.getElementById( "calendar" )
+
+flatpickr( calendar, {} )
 
 ipcRenderer.on( "folders", ( event, folders ) =>
 {
 	var folderRegex = /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(\d+)/g;
 	var regex = /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(.*).mp4/g;
-
-	function groupBy( list, keyGetter )
-	{
-		const map = new Map();
-
-		list.forEach( ( item ) =>
-		{
-			const key = keyGetter( item );
-			const collection = map.get( key );
-
-			if ( !collection ) map.set( key, [ item ] );
-			else collection.push(item);
-		});
-
-		return map;
-	}
-
-	function extractDate( match, hasSeconds = false )
-	{
-		var year = Number( match[ 1 ] )
-		var month = Number( match[ 2 ] ) - 1
-		var day = Number( match[ 3 ] )
-		var hour = Number( match[ 4 ] )
-		var minute = Number( match[ 5 ] )
-		var second = hasSeconds ? Number( match[ 6 ] ) : 0
-
-		return new Date( year, month, day, hour, minute, second )
-	}
-
-	function addElement( container, name, attributes )
-	{
-		var element = document.createElement( name )
-
-		container.appendChild( element )
-
-		if ( attributes )
-		{
-			for ( var key in attributes ) element.setAttribute( key, attributes[ key ] )
-		}
-
-		return element
-	}
 
 	var foldersElement = document.getElementById( "folders" )
 	var baseFolder = folders[ 0 ]
@@ -71,9 +37,9 @@ ipcRenderer.on( "folders", ( event, folders ) =>
 			{
 				function addFolder( match )
 				{
-					var date = extractDate( match, hasSeconds = true )
-					var folderElement = addElement( foldersElement, "div", { class: "folder" } )
-					var folderTitle = addElement( folderElement, "div", { class: "title" } )
+					var date = helpers.extractDate( match, hasSeconds = true )
+					var folderElement = helpers.addElement( foldersElement, "div", { class: "folder" } )
+					var folderTitle = helpers.addElement( folderElement, "div", { class: "title" } )
 					var folderPath = path.join( baseFolder, folder )
 			
 					folderTitle.innerText = date
@@ -113,7 +79,7 @@ ipcRenderer.on( "folders", ( event, folders ) =>
 
 				if ( match && match.length > 0 )
 				{
-					var date = extractDate( match )
+					var date = helpers.extractDate( match )
 					var camera = match[ 6 ]
 					var filePath = path.join( folder, file )
 
@@ -121,23 +87,23 @@ ipcRenderer.on( "folders", ( event, folders ) =>
 				}
 			}
 
-			var grouped = groupBy( files, f => f.date.toString() )
+			var grouped = helpers.groupBy( files, f => f.date.toString() )
 
 			for ( var [ dateTime, views ] of grouped )
 			{
 				function addVideos( views )
 				{
-					var div = addElement( element, "div", { class: "timespan" } )
-					var title = addElement( div, "h3", { class: "title" } )
+					var div = helpers.addElement( element, "div", { class: "timespan" } )
+					var title = helpers.addElement( div, "h3", { class: "title" } )
 
 					title.innerText = dateTime
 
-					var videoContainer = addElement( div, "div", { class: "container" } )
+					var videoContainer = helpers.addElement( div, "div", { class: "container" } )
 
 					function addVideo( className )
 					{
-						var column = addElement( videoContainer, "div", { class: "column" } )
-						var video = addElement( column, "video", { class: className } )
+						var column = helpers.addElement( videoContainer, "div", { class: "column" } )
+						var video = helpers.addElement( column, "video", { class: className } )
 
 						return video
 					}
@@ -149,7 +115,7 @@ ipcRenderer.on( "folders", ( event, folders ) =>
 						addVideo( "right_repeater" )
 					]
 
-					var end = addElement( videoContainer, "div", { class: "end" } )
+					var end = helpers.addElement( videoContainer, "div", { class: "end" } )
 
 					for ( var view of views )
 					{

@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <title>TeslaCam Browser</title>
+    <link rel="stylesheet" href="node_modules/flatpickr/dist/flatpickr.min.css">
     <style>
       html, body
       {
@@ -79,6 +80,8 @@
     <div class="page">
       <h1>TeslaCam Browser</h1>
       <!-- All of the Node.js APIs are available in this renderer process. -->
+      <button id="openButton">Open...</button>
+      <input id="calendar" class="flatpickr flatpickr-input" type="text" placeholder="Select Date.." readonly="readonly"/>
       <div id="folders" class="folders"></div>
       <div id="videos" class="videos"></div>
     </div>
