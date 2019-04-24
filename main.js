@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, dialog } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain } = require('electron')
 const menu = require( "./menu" )
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -41,7 +41,9 @@ function createWindow()
 		mainWindow = null
 	} )
 
-	menu.initialize( () => selectFolders( mainWindow.webContents) )
+	menu.initialize( () => selectFolders( mainWindow.webContents ) )
+
+	ipcMain.on( "selectFolders", () => selectFolders( mainWindow.webContents ) )
 }
 
 // This method will be called when Electron has finished
