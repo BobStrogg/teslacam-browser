@@ -58,44 +58,34 @@ exports.addControls = ( container, videos ) =>
 	{
 		var duration = 0.0
 
-		videos.forEach( v => { if ( !isNaN( v.duration ) ) duration += v.duration } )
+		videos.forEach( v => { if ( !isNaN( v.duration ) ) duration = Math.max( duration, v.duration ) } )
 	
 		videos.forEach( v =>
 		{
-			if ( !isNaN( v.duration ) ) v.currentTime = duration * ( range.value / 100 )
+			if ( !isNaN( v.duration ) ) v.currentTime = Math.min( v.duration, duration * ( range.value / 100 ) )
 		} )
 	 } )
 
-	 var positions = new Array( videos.length )
+	function updateRange()
+	{
+		var duration = 0.0
+		var total = 0.0
+		var count = 0
 
-	 function updateRange()
-	 {
-		 var total = 0.0
-		 var count = 0
-
-		 for ( var p of positions )
-		 {
-			 if ( !isNaN( p ) )
-			 {
-				 ++ count;
-				 total += p
-			 }
-		 }
-
-		 if ( count > 0 ) range.value = total / count
-	 }
-
-	 setTimeout( updateRange, 100 );
-
-	 videos.forEach( ( v, i ) =>
+		for ( var v of videos )
 		{
-			v.addEventListener( "timeupdate", () =>
+			if ( !isNaN( v.duration ) )
 			{
-				positions[ i ] = !isNaN( v.duration )
-					? ( 100 / v.duration ) * v.currentTime
-					: NaN
-			});
-		})
+				duration = Math.max( duration, v.duration )
+				total += v.currentTime
+				++ count
+			}
+		}
+
+		if ( count > 0 ) range.value = ( total / count ) / duration * 100
+	}
+
+	setInterval( updateRange, 250 );
 
 	container.appendChild( div )
 
