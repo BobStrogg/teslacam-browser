@@ -13,10 +13,13 @@ var openButton = document.getElementById( "openButton" )
 
 openButton.addEventListener( "click", ( e, ev ) => ipcRenderer.send( "selectFolders" ) )
 
+var times = document.getElementById( "times" )
+
+times.addEventListener( "change", ( e, ev ) => loadFolder( e.target.value ) )
+
 ipcRenderer.on( "folders", ( event, folders ) =>
 {
 	var folderRegex = /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(\d+)/g;
-	var regex = /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(.*).mp4/g;
 
 	var foldersElement = document.getElementById( "folders" )
 	var baseFolder = folders[ 0 ]
@@ -36,109 +39,133 @@ ipcRenderer.on( "folders", ( event, folders ) =>
 				function addFolder( match )
 				{
 					var date = helpers.extractDate( match, hasSeconds = true )
-					var folderElement = helpers.addElement( foldersElement, "div", { class: "folder" } )
-					var folderTitle = helpers.addElement( folderElement, "div", { class: "title" } )
+					//var folderElement = helpers.addElement( foldersElement, "div", { class: "folder" } )
+					//var folderTitle = helpers.addElement( folderElement, "div", { class: "title" } )
 					var folderPath = path.join( baseFolder, folder )
 			
-					folderTitle.innerText = date
-					folderTitle.addEventListener( "click", ( e, ev ) => loadFolder( folderPath, folderElement  ) )
+					//folderTitle.innerText = date
+					//folderTitle.addEventListener( "click", ( e, ev ) => loadFolder( folderPath, folderElement  ) )
 
-					folderInfos.push( date )
+					folderInfos.push( { date: date, path: folderPath } )
 				}
 
 				addFolder( match )
 			}
 		}
 
-		var dateGroups = helpers.groupBy( folderInfos, g => g.toDateString() )
+		var dateGroups = helpers.groupBy( folderInfos, g => g.date.toDateString() )
 		var dates = Array.from( dateGroups.keys() ).map( d => new Date( d ) )
 
 		var calendar = document.getElementById( "calendar" )
 
-		flatpickr( calendar, { enable: dates } )
-	} )
-
-	var selectedFolderElement = null
-
-	function loadFolder( folder, folderElement )
-	{
-		if ( selectedFolderElement ) selectedFolderElement.classList.remove( "selected" )
-
-		selectedFolderElement = folderElement
-		selectedFolderElement.classList.add( "selected" )
-
-		var element = document.getElementById( "videos" )
-
-		while ( element.firstChild )
+		function setTimes( date )
 		{
-			element.removeChild( element.firstChild )
+			times.options.length = 0
+
+			var timeValues = dateGroups.get( date.toDateString() )
+
+			for ( var time of timeValues )
+			{
+				times.options[ times.options.length ] = new Option( time.date, time.path )
+			}
+
+			if ( times.length > 0 )
+			{
+				loadFolder( times.options[ 0 ].value )
+			}
 		}
 
-		fs.readdir( folder, ( err, dir ) =>
-		{
-			var files = []
-
-			for ( var file of dir )
+		flatpickr(
+			calendar,
 			{
-				var match = regex.exec( file )
-
-				regex.lastIndex = 0
-
-				if ( match && match.length > 0 )
-				{
-					var date = helpers.extractDate( match )
-					var camera = match[ 6 ]
-					var filePath = path.join( folder, file )
-
-					files.push( { date: date, camera: camera, file: filePath } )
-				}
-			}
-
-			var grouped = helpers.groupBy( files, f => f.date.toString() )
-
-			for ( var [ dateTime, views ] of grouped )
-			{
-				function addVideos( views )
-				{
-					var div = helpers.addElement( element, "div", { class: "timespan" } )
-					var title = helpers.addElement( div, "h3", { class: "title" } )
-
-					title.innerText = dateTime
-
-					var videoContainer = helpers.addElement( div, "div", { class: "container" } )
-
-					function addVideo( className )
-					{
-						var column = helpers.addElement( videoContainer, "div", { class: "column" } )
-						var video = helpers.addElement( column, "video", { class: className } )
-
-						return video
-					}
-
-					var videos =
-					[
-						addVideo( "left_repeater" ),
-						addVideo( "front" ),
-						addVideo( "right_repeater" )
-					]
-
-					var end = helpers.addElement( videoContainer, "div", { class: "end" } )
-
-					for ( var view of views )
-					{
-						var video = videoContainer.getElementsByClassName( view.camera )
-
-						if ( video && video.length > 0 )
-						{
-							video[ 0 ].setAttribute( "src", view.file )
-						}
-					}
-
-					title.addEventListener( "click", ( e, ev ) => { for ( var v of videos ) { console.log( v ); v.play() } } )
-				}
-
-				addVideos( views )
-			}
-		} )
-	}
+				onChange: d => setTimes( d[ 0 ] ),
+				enable: dates
+			} )
+	} )
 } )
+
+var selectedFolderElement = null
+
+function loadFolder( folder, folderElement )
+{
+	var regex = /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(.*).mp4/g;
+
+//	if ( selectedFolderElement ) selectedFolderElement.classList.remove( "selected" )
+
+//	selectedFolderElement = folderElement
+//	selectedFolderElement.classList.add( "selected" )
+
+	var element = document.getElementById( "videos" )
+
+	while ( element.firstChild )
+	{
+		element.removeChild( element.firstChild )
+	}
+
+	fs.readdir( folder, ( err, dir ) =>
+	{
+		var files = []
+
+		for ( var file of dir )
+		{
+			var match = regex.exec( file )
+
+			regex.lastIndex = 0
+
+			if ( match && match.length > 0 )
+			{
+				var date = helpers.extractDate( match )
+				var camera = match[ 6 ]
+				var filePath = path.join( folder, file )
+
+				files.push( { date: date, camera: camera, file: filePath } )
+			}
+		}
+
+		var grouped = helpers.groupBy( files, f => f.date.toString() )
+
+		for ( var [ dateTime, views ] of grouped )
+		{
+			function addVideos( views )
+			{
+				var div = helpers.addElement( element, "div", { class: "timespan" } )
+				var title = helpers.addElement( div, "h3", { class: "title" } )
+
+				title.innerText = dateTime
+
+				var videoContainer = helpers.addElement( div, "div", { class: "container" } )
+
+				function addVideo( className )
+				{
+					var column = helpers.addElement( videoContainer, "div", { class: "column" } )
+					var video = helpers.addElement( column, "video", { class: className } )
+
+					return video
+				}
+
+				var videos =
+				[
+					addVideo( "left_repeater" ),
+					addVideo( "front" ),
+					addVideo( "right_repeater" )
+				]
+
+				var end = helpers.addElement( videoContainer, "div", { class: "end" } )
+
+				for ( var view of views )
+				{
+					var video = videoContainer.getElementsByClassName( view.camera )
+
+					if ( video && video.length > 0 )
+					{
+						video[ 0 ].setAttribute( "src", view.file )
+					}
+				}
+
+				title.addEventListener( "click", ( e, ev ) => { for ( var v of videos ) { console.log( v ); v.play() } } )
+			}
+
+			addVideos( views )
+		}
+	} )
+}
