@@ -13,10 +13,6 @@ var openButton = document.getElementById( "openButton" )
 
 openButton.addEventListener( "click", ( e, ev ) => ipcRenderer.send( "selectFolders" ) )
 
-var calendar = document.getElementById( "calendar" )
-
-flatpickr( calendar, {} )
-
 ipcRenderer.on( "folders", ( event, folders ) =>
 {
 	var folderRegex = /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(\d+)/g;
@@ -27,6 +23,8 @@ ipcRenderer.on( "folders", ( event, folders ) =>
 
 	fs.readdir( baseFolder, ( err, dir ) =>
 	{
+		var folderInfos = []
+	
 		for ( var folder of dir )
 		{
 			var match = folderRegex.exec( folder )
@@ -44,11 +42,20 @@ ipcRenderer.on( "folders", ( event, folders ) =>
 			
 					folderTitle.innerText = date
 					folderTitle.addEventListener( "click", ( e, ev ) => loadFolder( folderPath, folderElement  ) )
+
+					folderInfos.push( date )
 				}
 
 				addFolder( match )
 			}
-		}    
+		}
+
+		var dateGroups = helpers.groupBy( folderInfos, g => g.toDateString() )
+		var dates = Array.from( dateGroups.keys() ).map( d => new Date( d ) )
+
+		var calendar = document.getElementById( "calendar" )
+
+		flatpickr( calendar, { enable: dates } )
 	} )
 
 	var selectedFolderElement = null
