@@ -137,6 +137,7 @@ function loadFolder( folder, folderElement )
 			function addVideos( views )
 			{
 				var div = helpers.addElement( element, "div", { class: "timespan" } )
+				var controlsContainer = helpers.addElement( div, "div", { style: "float: right; margin: 5px;" } )
 				var title = helpers.addElement( div, "h3", { class: "title" } )
 
 				title.innerText = dateTime
@@ -170,7 +171,7 @@ function loadFolder( folder, folderElement )
 					}
 				}
 
-				title.addEventListener( "click", ( e, ev ) => { for ( var v of videos ) { console.log( v ); v.play() } } )
+				helpers.addControls( controlsContainer, videos )
 			}
 
 			addVideos( views )
