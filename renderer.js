@@ -13,6 +13,7 @@ var openButton = document.getElementById( "openButton" )
 
 openButton.addEventListener( "click", ( e, ev ) => ipcRenderer.send( "selectFolders" ) )
 
+var status = document.getElementById( "status" )
 var times = document.getElementById( "times" )
 
 times.addEventListener( "change", ( e, ev ) => loadFolder( e.target.value ) )
@@ -55,6 +56,13 @@ ipcRenderer.on( "folders", ( event, folders ) =>
 
 		var dateGroups = helpers.groupBy( folderInfos, g => g.date.toDateString() )
 		var dates = Array.from( dateGroups.keys() ).map( d => new Date( d ) )
+
+		function labelValue( label, value )
+		{
+			return `<span class="label">${label}:</span> <span class="value">${value}</span>`
+		}
+
+		status.innerHTML = `${labelValue( "Events", folderInfos.length )} ${labelValue( "Days", dates.length ) }`
 
 		var calendar = document.getElementById( "calendar" )
 
