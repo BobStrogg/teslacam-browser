@@ -7,7 +7,11 @@ const fs = require( "fs" )
 const path = require( "path" )
 const flatpickr = require( "flatpickr" )
 const helpers = require( "./renderer-helpers" )
-const { dialog } = require( "electron" ).remote
+const { dialog, app } = require( "electron" ).remote
+
+var version = document.getElementById( "version" )
+
+version.innerText = app.getVersion()
 
 var openButton = document.getElementById( "openButton" )
 
