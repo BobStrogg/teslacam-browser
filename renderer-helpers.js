@@ -42,9 +42,8 @@ exports.addElement = ( container, name, attributes ) =>
 
 exports.addControls = ( container, videos ) =>
 {
-	var div = exports.addElement( container, "div" )
-	var playPause = exports.addElement( div, "button", { type: "button" } )
-	var range = exports.addElement( div, "input", { type: "range", value: 0 } )
+	var playPause = exports.addElement( container, "button", { type: "button", class: "playPause" } )
+	var scrub = exports.addElement( container, "input", { type: "range", value: 0, class: "scrub" } )
 
 	playPause.innerText = "Play"
 
@@ -54,7 +53,7 @@ exports.addControls = ( container, videos ) =>
 			else { v.pause(); playPause.innerText = "Play"; }
 		} ) )
 
-	range.addEventListener( "input", ( e, ev ) =>
+	scrub.addEventListener( "input", ( e, ev ) =>
 	{
 		var duration = 0.0
 
@@ -62,11 +61,11 @@ exports.addControls = ( container, videos ) =>
 	
 		videos.forEach( v =>
 		{
-			if ( !isNaN( v.duration ) ) v.currentTime = Math.min( v.duration, duration * ( range.value / 100 ) )
+			if ( !isNaN( v.duration ) ) v.currentTime = Math.min( v.duration, duration * ( scrub.value / 100 ) )
 		} )
 	 } )
 
-	function updateRange()
+	function updateScrub()
 	{
 		var duration = 0.0
 		var total = 0.0
@@ -82,12 +81,8 @@ exports.addControls = ( container, videos ) =>
 			}
 		}
 
-		if ( count > 0 ) range.value = ( total / count ) / duration * 100
+		if ( count > 0 ) scrub.value = ( total / count ) / duration * 100
 	}
 
-	setInterval( updateRange, 250 );
-
-	container.appendChild( div )
-
-	return div
+	setInterval( updateScrub, 250 );
 }

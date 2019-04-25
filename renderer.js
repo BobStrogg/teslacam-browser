@@ -137,17 +137,19 @@ function loadFolder( folder, folderElement )
 			function addVideos( views )
 			{
 				var div = helpers.addElement( element, "div", { class: "timespan" } )
-				var controlsContainer = helpers.addElement( div, "div", { style: "float: right; margin: 5px;" } )
-				var title = helpers.addElement( div, "h3", { class: "title" } )
+				var container = helpers.addElement( div, "div", { class: "titleContainer" } )
+				var controlsContainer = helpers.addElement( container, "div", { class: "controls" } )
+				var title = helpers.addElement( container, "div", { class: "title", title: "Show in file manager" } )
 
 				title.innerText = dateTime
+				title.addEventListener( "click", ( e, ev ) => shell.showItemInFolder( views[ 0 ].file ) )
 
 				var videoContainer = helpers.addElement( div, "div", { class: "container" } )
 
 				function addVideo( className )
 				{
-					var column = helpers.addElement( videoContainer, "div", { class: "column" } )
-					var video = helpers.addElement( column, "video", { class: className } )
+					var column = helpers.addElement( videoContainer, "div", { class: "column"} )
+					var video = helpers.addElement( column, "video", { class: className, title: "Show in file manager" } )
 
 					return video
 				}
@@ -163,12 +165,18 @@ function loadFolder( folder, folderElement )
 
 				for ( var view of views )
 				{
-					var video = videoContainer.getElementsByClassName( view.camera )
-
-					if ( video && video.length > 0 )
+					function assignVideo( view )
 					{
-						video[ 0 ].setAttribute( "src", view.file )
+						var video = videoContainer.getElementsByClassName( view.camera )
+
+						if ( video && video.length > 0 )
+						{
+							video[ 0 ].setAttribute( "src", view.file )
+							video[ 0 ].addEventListener( "click", ( e, ev ) => shell.showItemInFolder( view.file ) )
+						}
 					}
+
+					assignVideo( view )
 				}
 
 				helpers.addControls( controlsContainer, videos )

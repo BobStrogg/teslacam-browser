@@ -1,7 +1,7 @@
 {
   "name": "teslacam-browser",
   "productName": "TeslaCam Browser",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A minimal TeslaCam Browser",
   "main": "main.js",
   "scripts": {

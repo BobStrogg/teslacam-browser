@@ -14,6 +14,18 @@
           font-family: Arial, Helvetica, sans-serif;
       }
 
+      .button
+      {
+        background-color: #008CBA; /* Blue */
+        border: none;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+      }
+
       .page
       {
         position: absolute;
@@ -21,14 +33,14 @@
         right: 5px;
       }
 
-	  .label
-	  {
-		  color: darkgrey;
-	  }
+      .label
+      {
+        color: darkgrey;
+      }
 
-	  .value
-	  {
-	  }
+      .value
+      {
+      }
 
       .folders
       {
@@ -47,18 +59,53 @@
 
       .folders .folder .title
       {
-        cursor: pointer;
       }
 
       .videos .timespan
       {
+        position: relative;
       }
 
-      .videos .timespan .title
+      .videos .timespan .titleContainer
       {
-        padding: 5px;
-        background-color: lightsteelblue;
+        padding: 10px 10px;
+        border-radius: 5px;
+        background-color: lightgrey;
+        margin-top: 10px;
+        margin-bottom: 5px;
+      }
+    
+      .videos .timespan .titleContainer .title
+      {
         cursor: pointer;
+      }
+
+      .videos .timespan .titleContainer .controls
+      {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        bottom: 10px;
+      }
+
+      .videos .timespan .titleContainer .controls .scrub
+      {
+        vertical-align: middle;
+        margin-left: 10px;
+        outline: none;
+      }
+
+      .videos .timespan .titleContainer .controls .playPause
+      {
+        vertical-align: middle;
+        background-color: #4CAF50; /* Green */
+        border: none;
+        color: white;
+        padding: 3px 10px;
+        border-radius: 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
       }
 
       .videos .container
@@ -76,6 +123,7 @@
       {
           width: 100%;
           height: auto;
+          cursor: pointer;
       }
 
       .videos .container .end
@@ -90,7 +138,7 @@
       <h5 style="float: right;">by Chris Cavanagh</h5>
       <h1>TeslaCam Browser</h1>
       <!-- All of the Node.js APIs are available in this renderer process. -->
-	  <button id="openButton">Open SavedClips...</button>
+	  <button id="openButton" class="button">Open SavedClips...</button>
 	  <span id="status"></span>
       <input id="calendar" class="flatpickr flatpickr-input" type="text" placeholder="Select Date.." readonly="readonly"/>
       <select id="times"></select>
