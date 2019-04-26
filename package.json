@@ -1,13 +1,15 @@
 {
   "name": "teslacam-browser",
   "productName": "TeslaCam Browser",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "A minimal TeslaCam Browser",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "release": "build",
+    "publish": "build --mac --win --linux -p always"
   },
   "repository": "https://github.com/BobStrogg/teslacam-browser",
   "keywords": [
@@ -20,7 +22,17 @@
   "license": "CC0-1.0",
   "build": {
     "appId": "cjc-teslacam-browser",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "bobstrogg",
+        "repo": "teslacam-browser"
+      }
+    ],
     "dmg": {
+      "publish": [
+        "github"
+      ],
       "contents": [
         {
           "x": 110,
@@ -35,12 +47,18 @@
       ]
     },
     "linux": {
+      "publish": [
+        "github"
+      ],
       "target": [
         "AppImage",
         "deb"
       ]
     },
     "win": {
+      "publish": [
+        "github"
+      ],
       "target": "NSIS",
       "icon": "build/icon.ico"
     }
@@ -51,6 +69,7 @@
   },
   "dependencies": {
     "buffer-alloc-unsafe": "^1.1.0",
+    "electron-updater": "^4.0.6",
     "flatpickr": "^4.5.7",
     "yarn": "^1.15.2"
   }
