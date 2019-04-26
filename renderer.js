@@ -22,86 +22,103 @@ var times = document.getElementById( "times" )
 
 times.addEventListener( "change", ( e, ev ) => loadFolder( e.target.value ) )
 
+var folderRegex = /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(\d+)/g;
+var clipRegex = /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(.*).mp4/g;
+
 ipcRenderer.on( "folders", ( event, folders ) =>
 {
-	var folderRegex = /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(\d+)/g;
+	var specialFolders = [ "TeslaCam", "SavedClips", "RecentClips" ]
+	var rawFolders = [ "RecentClips" ]
+	var folderInfos = []
 
-	var foldersElement = document.getElementById( "folders" )
-	var baseFolder = folders[ 0 ]
-
-	fs.readdir( baseFolder, ( err, dir ) =>
+	function addSubfolders( baseFolder )
 	{
-		var folderInfos = []
-	
-		for ( var folder of dir )
+		var subfolders = fs.readdirSync( baseFolder )
+
+		for ( var folder of subfolders )
 		{
-			var match = folderRegex.exec( folder )
-		
-			folderRegex.lastIndex = 0
-		
-			if ( match && match.length > 0 )
+			if ( specialFolders.includes( folder ) )
 			{
-				function addFolder( match )
-				{
-					var date = helpers.extractDate( match, hasSeconds = true )
-					//var folderElement = helpers.addElement( foldersElement, "div", { class: "folder" } )
-					//var folderTitle = helpers.addElement( folderElement, "div", { class: "title" } )
-					var folderPath = path.join( baseFolder, folder )
+				addSubfolders( path.join( baseFolder, folder ) )
+			}
+			else
+			{
+				var match = folderRegex.exec( folder )
 			
-					//folderTitle.innerText = date
-					//folderTitle.addEventListener( "click", ( e, ev ) => loadFolder( folderPath, folderElement  ) )
+				folderRegex.lastIndex = 0
+			
+				if ( match && match.length > 0 )
+				{
+					function addFolder( match )
+					{
+						var date = helpers.extractDate( match, hasSeconds = true )
+						var folderPath = path.join( baseFolder, folder )
+				
+						folderInfos.push( { date: date, path: folderPath } )
+					}
 
-					folderInfos.push( { date: date, path: folderPath } )
+					addFolder( match )
 				}
+				else
+				{
+					var clipMatch = clipRegex.exec( folder )
 
-				addFolder( match )
+					clipRegex.lastIndex = 0
+
+					if ( clipMatch && clipMatch.length > 0 )
+					{
+						var date = helpers.extractDate( clipMatch, hasSeconds = false )
+				
+						folderInfos.push( { date: date, path: baseFolder } )
+					}
+				}
 			}
 		}
+	}
 
-		var dateGroups = helpers.groupBy( folderInfos, g => g.date.toDateString() )
-		var dates = Array.from( dateGroups.keys() ).map( d => new Date( d ) )
+	addSubfolders( folders[ 0 ] )
 
-		function labelValue( label, value )
+	var dateGroups = helpers.groupBy( folderInfos, g => g.date.toDateString() )
+	var dates = Array.from( dateGroups.keys() ).map( d => new Date( d ) )
+
+	function labelValue( label, value )
+	{
+		return `<span class="label">${label}:</span> <span class="value">${value}</span>`
+	}
+
+	status.innerHTML = `${labelValue( "Events", folderInfos.length )} ${labelValue( "Days", dates.length ) }`
+
+	var calendar = document.getElementById( "calendar" )
+
+	function setTimes( date )
+	{
+		times.options.length = 0
+
+		var timeValues = dateGroups.get( date.toDateString() )
+
+		for ( var time of timeValues )
 		{
-			return `<span class="label">${label}:</span> <span class="value">${value}</span>`
+			times.options[ times.options.length ] = new Option( time.date, time.path )
 		}
 
-		status.innerHTML = `${labelValue( "Events", folderInfos.length )} ${labelValue( "Days", dates.length ) }`
-
-		var calendar = document.getElementById( "calendar" )
-
-		function setTimes( date )
+		if ( times.length > 0 )
 		{
-			times.options.length = 0
-
-			var timeValues = dateGroups.get( date.toDateString() )
-
-			for ( var time of timeValues )
-			{
-				times.options[ times.options.length ] = new Option( time.date, time.path )
-			}
-
-			if ( times.length > 0 )
-			{
-				loadFolder( times.options[ 0 ].value )
-			}
+			loadFolder( times.options[ 0 ].value )
 		}
+	}
 
-		flatpickr(
-			calendar,
-			{
-				onChange: d => setTimes( d[ 0 ] ),
-				enable: dates
-			} )
-	} )
+	flatpickr(
+		calendar,
+		{
+			onChange: d => setTimes( d[ 0 ] ),
+			enable: dates
+		} )
 } )
 
 var selectedFolderElement = null
 
 function loadFolder( folder, folderElement )
 {
-	var regex = /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(.*).mp4/g;
-
 //	if ( selectedFolderElement ) selectedFolderElement.classList.remove( "selected" )
 
 //	selectedFolderElement = folderElement
@@ -120,9 +137,9 @@ function loadFolder( folder, folderElement )
 
 		for ( var file of dir )
 		{
-			var match = regex.exec( file )
+			var match = clipRegex.exec( file )
 
-			regex.lastIndex = 0
+			clipRegex.lastIndex = 0
 
 			if ( match && match.length > 0 )
 			{
