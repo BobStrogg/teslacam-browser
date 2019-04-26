@@ -4,6 +4,8 @@ This is a simple browser for TeslaCam recordings.  These are the files that are 
 
 To use this app, simply click the "Open SavedClips..." button and browse to the ```TeslaCam/SavedClips``` folder (either by plugging the TeslaCam USB drive into your PC / Mac, or possibly accessing it as a network share over WiFi if supported).  It'll aggregate clips by date and present them on a calendar, and a dropdown list to select individual events on that date.
 
+Basic video playback controls let you view all available cameras side-by-side.
+
 ## License
 
 [CC0 1.0 (Public Domain)](LICENSE.md)
