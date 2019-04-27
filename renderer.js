@@ -1,7 +1,7 @@
 // This file is required by the index.html file and will
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
-const {shell, ipcRenderer} = require( "electron" )
+const {shell, ipcRenderer, clipboard} = require( "electron" )
 const os = require( "os" )
 const fs = require( "fs" )
 const path = require( "path" )
@@ -21,6 +21,10 @@ var status = document.getElementById( "status" )
 var times = document.getElementById( "times" )
 
 times.addEventListener( "change", ( e, ev ) => loadFolder( e.target.value ) )
+
+var copyButton = document.getElementById( "copyButton" )
+
+copyButton.addEventListener( "click", ( e, ev ) => clipboard.writeText( times.value ) )
 
 var folderRegex = /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(\d+)/g;
 var clipRegex = /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(.*).mp4/g;
@@ -54,7 +58,7 @@ ipcRenderer.on( "folders", ( event, folders ) =>
 						var date = helpers.extractDate( match, hasSeconds = true )
 						var folderPath = path.join( baseFolder, folder )
 				
-						folderInfos.push( { date: date, path: folderPath } )
+						folderInfos.push( { date: date, path: folderPath, recent: false } )
 					}
 
 					addFolder( match )
@@ -68,8 +72,16 @@ ipcRenderer.on( "folders", ( event, folders ) =>
 					if ( clipMatch && clipMatch.length > 0 )
 					{
 						var date = helpers.extractDate( clipMatch, hasSeconds = false )
-				
-						folderInfos.push( { date: date, path: baseFolder } )
+						var existing = folderInfos.find( i => i.path == baseFolder )
+
+						if ( existing )
+						{
+							if ( date > existing.date ) existing.date = date
+						}
+						else
+						{
+							folderInfos.push( { date: date, path: baseFolder, recent: true } )
+						}
 					}
 				}
 			}
@@ -96,12 +108,19 @@ ipcRenderer.on( "folders", ( event, folders ) =>
 
 		var timeValues = dateGroups.get( date.toDateString() )
 
-		for ( var time of timeValues )
+		if ( timeValues )
 		{
-			times.options[ times.options.length ] = new Option( time.date, time.path )
+			for ( var time of timeValues )
+			{
+				var name = time.date.toString()
+
+				if ( time.recent ) name += "(Recent)"
+
+				times.options[ times.options.length ] = new Option( name, time.path )
+			}
 		}
 
-		if ( times.length > 0 )
+		if ( times.options.length > 0 )
 		{
 			loadFolder( times.options[ 0 ].value )
 		}
@@ -169,8 +188,8 @@ function loadFolder( folder, folderElement )
 
 				function addVideo( className )
 				{
-					var column = helpers.addElement( videoContainer, "div", { class: "column"} )
-					var video = helpers.addElement( column, "video", { class: className, title: "Show in file manager" } )
+					var column = helpers.addElement( videoContainer, "div", { class: "column" } )
+					var video = helpers.addElement( column, "video", { class: className, preload: "metadata", title: "Show in file manager" } )
 
 					return video
 				}
@@ -192,7 +211,7 @@ function loadFolder( folder, folderElement )
 
 						if ( video && video.length > 0 )
 						{
-							video[ 0 ].setAttribute( "src", view.file )
+							video[ 0 ].setAttribute( "src", view.file + "#t=0.03" )
 							video[ 0 ].addEventListener( "click", ( e, ev ) => shell.showItemInFolder( view.file ) )
 						}
 					}
@@ -200,7 +219,7 @@ function loadFolder( folder, folderElement )
 					assignVideo( view )
 				}
 
-				helpers.addControls( controlsContainer, videos )
+				helpers.addControls( controlsContainer, videos, ( e, ev ) => clipboard.writeText( views[ 0 ].file ) )
 			}
 
 			addVideos( views )
