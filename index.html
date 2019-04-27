@@ -15,41 +15,49 @@
         color: darkslategray;
       }
 
-      .page
+      .leftMargin
       {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        right: 10px;
+        margin-left: 10px;
       }
 
-      .page .heading
+      .navigation
+      {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        right: 0px;
+        padding: 10px;
+        background: #FFFFFFF0;
+        white-space: nowrap;
+      }
+
+      .navigation .heading
       {
         font-size: 32pt;
       }
 
-      .page .version
+      .navigation .version
       {
         margin-left: 10px;
         font-size: 24pt;
         color: lightgray;
       }
 
-      .page .credits
+      .navigation .credits
       {
         margin-left: 10px;
         font-size: 12pt;
         color: darkgray;
       }
 
-      .page .donate
+      .navigation .donate
       {
         position: absolute;
         right: 0px;
         top: 5px;
       }
 
-      .page .button
+      .navigation .openButton
       {
         background-color: #008CBA; /* Blue */
         border: none;
@@ -61,17 +69,56 @@
         display: inline-block;
       }
 
-      .page .leftMargin
-      {
-        margin-left: 10px;
-      }
-
-      .page .label
+      .navigation .label
       {
         color: darkgrey;
       }
 
-      .page .value
+      .navigation .value
+      {
+      }
+
+      .navigation .status
+      {
+      }
+
+      .navigation .dates
+      {
+      }
+
+      .navigation .times
+      {
+      }
+
+      .navigation .copyButton
+      {
+        background-color: #f44336; /* Red */ 
+        border: none;
+        color: white;
+        padding: 5px;
+        border-radius: 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .page
+      {
+        position: absolute;
+        top: 0px;
+        left: 10px;
+        right: 10px;
+        bottom: 0px;
+        overflow-y: auto;
+      }
+
+      .page .scroll
+      {
+        margin-top: 105px;
+        margin-bottom: 10px;
+      }
+
+      .page .videos
       {
       }
 
@@ -87,6 +134,7 @@
         background-color: lightgrey;
         margin-top: 10px;
         margin-bottom: 5px;
+        white-space: nowrap;
       }
     
       .page .videos .timespan .titleContainer .title
@@ -120,6 +168,21 @@
         text-align: center;
         text-decoration: none;
         display: inline-block;
+        margin-left: 10px;
+      }
+
+      .page .videos .timespan .titleContainer .controls .copy
+      {
+        vertical-align: middle;
+        background-color: #f44336; /* Red */
+        border: none;
+        color: white;
+        padding: 3px 10px;
+        border-radius: 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        margin-left: 10px;
       }
 
       .page .videos .container
@@ -148,7 +211,13 @@
     </style>
   </head>
   <body>
+
     <div class="page">
+      <div id="videos" class="videos"></div>
+    </div>
+
+    <!--div class="blur"></div-->
+    <div class="navigation">
       <div class="donate">
         <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
           <input type="hidden" name="cmd" value="_donations" />
@@ -165,16 +234,17 @@
         <span class="credits">by Chris Cavanagh</span>
       </div>
       <!-- All of the Node.js APIs are available in this renderer process. -->
-      <button id="openButton" class="button">Open...</button>
+      <button id="openButton" class="openButton">Open...</button>
       <span id="status" class="status leftMargin"></span>
-      <input id="calendar" class="flatpickr flatpickr-input leftMargin" type="text" placeholder="Select Date.." readonly="readonly"/>
-      <select id="times" class="leftMargin"></select>
-      <div id="videos" class="videos"></div>
+      <input id="calendar" class="flatpickr flatpickr-input dates leftMargin" type="text" placeholder="Select Date.." readonly="readonly"/>
+      <select id="times" class="times leftMargin"></select>
+      <button id="copyButton" class="copyButton leftMargin">Copy</button>
     </div>
 
     <script>
       // You can also require other files to run in this process
       require('./renderer.js')
     </script>
-  </body>
+
+</body>
 </html>

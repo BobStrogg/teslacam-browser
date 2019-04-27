@@ -40,8 +40,16 @@ exports.addElement = ( container, name, attributes ) =>
     return element
 }
 
-exports.addControls = ( container, videos ) =>
+exports.addControls = ( container, videos, onCopy = null ) =>
 {
+	if ( onCopy )
+	{
+		var copy = exports.addElement( container, "button", { type: "button", class: "copy" } )
+
+		copy.innerText = "Copy"
+		copy.addEventListener( "click", onCopy )
+	}
+
 	var playPause = exports.addElement( container, "button", { type: "button", class: "playPause" } )
 	var scrub = exports.addElement( container, "input", { type: "range", value: 0, class: "scrub" } )
 
