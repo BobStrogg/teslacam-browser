@@ -12,7 +12,7 @@ If you've installed [tesla_dashcam](https://github.com/ehendrix23/tesla_dashcam)
 
 1. Select the date and event folder you'd like to merge in TeslaCam Browser
 2. Click the "Copy" button; this will copy the folder path into the clipboard
-3. Open a Terminal (macOS) or Command Promot (Windows) and invoke tesla_dashcam (pasting the file path from the clipboard)
+3. Open a Terminal (macOS) or Command Prompt (Windows) and invoke tesla_dashcam (pasting the file path from the clipboard)
    `> tesla_dashcam "<paste_folder_here>"`
 
 ## License
