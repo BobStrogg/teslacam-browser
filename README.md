@@ -6,6 +6,15 @@ To use this app, simply click the "Open..." button and browse to the ```TeslaCam
 
 Basic video playback controls let you view all available cameras side-by-side.  Clicking on a video will open a file browser pointing to the source file.
 
+## tesla_dashcam
+
+If you've installed [tesla_dashcam](https://github.com/ehendrix23/tesla_dashcam), you can use it to merge clips from the command-line, using a folder path provided by TeslaCam Browser:
+
+1. Select the date and event folder you'd like to merge in TeslaCam Browser
+2. Click the "Copy" button; this will copy the folder path into the clipboard
+3. Open a Terminal (macOS) or Command Promot (Windows) and invoke tesla_dashcam (pasting the file path from the clipboard)
+   `> tesla_dashcam "<paste_folder_here>"`
+
 ## License
 
 [CC0 1.0 (Public Domain)](LICENSE.md)
