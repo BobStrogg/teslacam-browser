@@ -8,7 +8,7 @@ Basic video playback controls let you view all available cameras side-by-side.  
 
 ## tesla_dashcam
 
-If you've installed [tesla_dashcam](https://github.com/ehendrix23/tesla_dashcam), you can use it to merge clips from the command-line, using a folder path provided by TeslaCam Browser:
+If you've installed [tesla_dashcam](https://github.com/ehendrix23/tesla_dashcam), you can use it to merge clips from the command-line using a folder path provided by TeslaCam Browser:
 
 1. Select the date and event folder you'd like to merge in TeslaCam Browser
 2. Click the "Copy" button; this will copy the folder path into the clipboard
