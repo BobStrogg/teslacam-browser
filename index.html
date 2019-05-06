@@ -54,7 +54,7 @@
       {
         position: absolute;
         right: 0px;
-        top: 5px;
+        top: 10px;
       }
 
       .navigation .openButton
@@ -92,10 +92,11 @@
 
       .navigation .copyButton
       {
-        background-color: #f44336; /* Red */ 
+        /*background-color: #f44336; /* Red */
+        background-color: #008CBA; /* Blue */
         border: none;
         color: white;
-        padding: 5px;
+        padding: 5px 10px;
         border-radius: 5px;
         text-align: center;
         text-decoration: none;
@@ -170,7 +171,23 @@
       .page .videos .timespan .titleContainer .controls .copy
       {
         vertical-align: middle;
+        /*background-color: #f44336; /* Red */
+        background-color: #008CBA; /* Blue */
+        border: none;
+        color: white;
+        padding: 3px 10px;
+        border-radius: 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        margin-left: 10px;
+      }
+
+      .page .videos .timespan .titleContainer .controls .delete
+      {
+        vertical-align: middle;
         background-color: #f44336; /* Red */
+        /*background-color: #008CBA; /* Blue */
         border: none;
         color: white;
         padding: 3px 10px;
@@ -208,7 +225,7 @@
   </head>
   <body>
 
-    <div class="page">
+    <div id="page" class="page">
       <div id="videos" class="videos"></div>
     </div>
 
@@ -234,7 +251,7 @@
       <span id="status" class="status leftMargin"></span>
       <input id="calendar" class="flatpickr flatpickr-input dates leftMargin" type="text" placeholder="Select Date.." readonly="readonly"/>
       <select id="times" class="times leftMargin"></select>
-      <button id="copyButton" class="copyButton leftMargin">Copy</button>
+      <button id="copyButton" class="copyButton leftMargin">Copy path</button>
     </div>
 
     <script>
