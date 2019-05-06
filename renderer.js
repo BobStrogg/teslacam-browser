@@ -134,6 +134,21 @@ ipcRenderer.on( "folders", ( event, folders ) =>
 		} )
 } )
 
+function deleteClips( dateTime, views, deleteDiv )
+{
+	if ( confirm( `Are you sure you want to delete clips from ${dateTime}?` ) )
+	{
+		for ( var view of views ) fs.unlinkSync( view.file )
+
+		var folderPath = path.dirname( views[ 0 ].file )
+		var files = fs.readdirSync( folderPath )
+
+		if ( files.length < 1 ) fs.rmdirSync( folderPath )
+
+		deleteDiv.parentNode.removeChild( deleteDiv )
+	}
+}
+
 var selectedFolderElement = null
 
 function loadFolder( folder, folderElement )
@@ -142,6 +157,13 @@ function loadFolder( folder, folderElement )
 
 //	selectedFolderElement = folderElement
 //	selectedFolderElement.classList.add( "selected" )
+
+	var page = document.getElementById( "page" )
+
+	function raiseDirty() { page.dispatchEvent( new Event( "dirty" ) ) }
+
+	page.addEventListener( "scroll", ( e, ev ) => raiseDirty() )
+	window.addEventListener( "resize", ( e, ev ) => raiseDirty() )
 
 	var element = document.getElementById( "videos" )
 
@@ -174,55 +196,76 @@ function loadFolder( folder, folderElement )
 
 		for ( var [ dateTime, views ] of grouped )
 		{
-			function addVideos( views )
+			function addVideosForTime( dateTime, views )
 			{
 				var div = helpers.addElement( element, "div", { class: "timespan" } )
 				var container = helpers.addElement( div, "div", { class: "titleContainer" } )
 				var controlsContainer = helpers.addElement( container, "div", { class: "controls" } )
-				var title = helpers.addElement( container, "div", { class: "title", title: "Show in file manager" } )
-
-				title.innerText = dateTime
-				title.addEventListener( "click", ( e, ev ) => shell.showItemInFolder( views[ 0 ].file ) )
-
+				var title = helpers.addElement( container, "div", { class: "title", title: "Show / hide" } )
 				var videoContainer = helpers.addElement( div, "div", { class: "container" } )
 
-				function addVideo( className )
+				title.innerText = dateTime
+
+				title.addEventListener( "click", ( e, ev ) =>
 				{
-					var column = helpers.addElement( videoContainer, "div", { class: "column" } )
-					var video = helpers.addElement( column, "video", { class: className, preload: "metadata", title: "Show in file manager" } )
+					videoContainer.style.display = ( videoContainer.style.display != "none" ) ? "none" : "block"
+					raiseDirty()
+				} )
 
-					return video
-				}
-
-				var videos =
-				[
-					addVideo( "left_repeater" ),
-					addVideo( "front" ),
-					addVideo( "right_repeater" )
-				]
-
-				var end = helpers.addElement( videoContainer, "div", { class: "end" } )
-
-				for ( var view of views )
+				function ensureVideos()
 				{
-					function assignVideo( view )
+					if ( videoContainer.hasChildNodes() ) return true
+					if ( !helpers.isInViewport( videoContainer ) ) return false
+
+					function addVideo( className )
 					{
-						var video = videoContainer.getElementsByClassName( view.camera )
+						var column = helpers.addElement( videoContainer, "div", { class: "column" } )
+						var video = helpers.addElement( column, "video", { class: className, preload: "metadata", title: "Show in file manager" } )
 
-						if ( video && video.length > 0 )
-						{
-							video[ 0 ].setAttribute( "src", view.file + "#t=0.03" )
-							video[ 0 ].addEventListener( "click", ( e, ev ) => shell.showItemInFolder( view.file ) )
-						}
+						return video
 					}
 
-					assignVideo( view )
+					var videos =
+					[
+						addVideo( "left_repeater" ),
+						addVideo( "front" ),
+						addVideo( "right_repeater" )
+					]
+
+					var end = helpers.addElement( videoContainer, "div", { class: "end" } )
+
+					for ( var view of views )
+					{
+						function assignVideo( view )
+						{
+							var video = videoContainer.getElementsByClassName( view.camera )
+
+							if ( video && video.length > 0 )
+							{
+								video[ 0 ].setAttribute( "src", view.file + "#t=0.03" )
+								video[ 0 ].addEventListener( "click", ( e, ev ) => shell.showItemInFolder( view.file ) )
+							}
+						}
+
+						assignVideo( view )
+					}
+
+					helpers.addControls(
+						controlsContainer,
+						videos,
+						( e, ev ) => clipboard.writeText( views[ 0 ].file ),
+						( e, ev ) => deleteClips( dateTime, views, div ) )
+
+					return true
 				}
 
-				helpers.addControls( controlsContainer, videos, ( e, ev ) => clipboard.writeText( views[ 0 ].file ) )
+				if ( !ensureVideos() )
+				{
+					page.addEventListener( "dirty", ( e, ev ) => ensureVideos() )
+				}
 			}
 
-			addVideos( views )
+			addVideosForTime( dateTime, views )
 		}
 	} )
 }

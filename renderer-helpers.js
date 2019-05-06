@@ -40,13 +40,21 @@ exports.addElement = ( container, name, attributes ) =>
     return element
 }
 
-exports.addControls = ( container, videos, onCopy = null ) =>
+exports.addControls = ( container, videos, onCopy = null, onDelete = null ) =>
 {
+	if ( onDelete )
+	{
+		var deleteButton = exports.addElement( container, "button", { type: "button", class: "delete" } )
+
+		deleteButton.innerText = "Delete"
+		deleteButton.addEventListener( "click", onDelete )
+	}
+
 	if ( onCopy )
 	{
 		var copy = exports.addElement( container, "button", { type: "button", class: "copy" } )
 
-		copy.innerText = "Copy"
+		copy.innerText = "Copy path"
 		copy.addEventListener( "click", onCopy )
 	}
 
@@ -92,5 +100,17 @@ exports.addControls = ( container, videos, onCopy = null ) =>
 		if ( count > 0 ) scrub.value = ( total / count ) / duration * 100
 	}
 
-	setInterval( updateScrub, 250 );
+	setInterval( updateScrub, 250 )
+}
+
+exports.isInViewport = ( elem ) =>
+{
+	var bounding = elem.getBoundingClientRect()
+
+    return (
+        bounding.top >= 0 &&
+        bounding.left >= 0 &&
+        bounding.bottom <= ( window.innerHeight || document.documentElement.clientHeight ) &&
+        bounding.right <= ( window.innerWidth || document.documentElement.clientWidth )
+    )
 }
