@@ -6,6 +6,10 @@ To use this app, simply click the "Open..." button and browse to the ```TeslaCam
 
 Basic video playback controls let you view all available cameras side-by-side.  Clicking on a video will open a file browser pointing to the source file.
 
+## Hardware 3.0 (HW3)
+
+It appears newer vehicles with HW3 encode video in HEVC / H-265 format, which Chrome seems unable to handle.  All you'll see are blank areas where the videos should be, and clicking "Play" will throw an error (visible on the debug console).
+
 ## tesla_dashcam
 
 If you've installed [tesla_dashcam](https://github.com/ehendrix23/tesla_dashcam), you can use it to merge clips from the command-line using a folder path provided by TeslaCam Browser:
