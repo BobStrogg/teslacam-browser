@@ -1,7 +1,7 @@
 {
   "name": "teslacam-browser",
   "productName": "TeslaCam Browser",
-  "version": "0.0.89",
+  "version": "0.0.9",
   "description": "A minimal TeslaCam Browser",
   "main": "main.js",
   "scripts": {
@@ -68,9 +68,16 @@
     "electron-builder": "^20.39.0"
   },
   "dependencies": {
+    "bootstrap": "^4.1.3",
+    "bootstrap-vue": "^2.0.0-rc.20",
     "buffer-alloc-unsafe": "^1.1.0",
     "electron-updater": "^4.0.6",
+    "express": "^4.17.0",
     "flatpickr": "^4.5.7",
+    "jquery": "^3.3.1",
+    "popper.js": "^1.14.4",
+    "serve-index": "^1.9.1",
+    "vue": "^2.6.10",
     "yarn": "^1.15.2"
   }
 }
