@@ -1,0 +1,72 @@
+html, body
+{
+    height: 100%;
+}
+
+#root
+{
+    height: 100%;
+}
+
+#heading
+{
+  min-height: 80px;
+}
+
+#heading .heading
+{
+  font-size: 32pt;
+  cursor: pointer;
+}
+
+#heading .version
+{
+  font-size: 24pt;
+  color: lightgray;
+}
+
+#heading .credits
+{
+  font-size: 12pt;
+  color: darkgray;
+}
+
+#content
+{
+    align-items: stretch;
+    height: 100%;
+}
+
+#sidebar
+{
+    min-width: 320px;
+    max-width: 320px;
+    height: 100%;
+}
+
+#sidebar.hidden
+{
+    margin-left: -320px;
+}
+
+#videos
+{
+    overflow-y: auto;
+}
+
+#detail .timespan .titleContainer .title
+{
+  cursor: pointer;
+}
+
+#detail .timespan .videoContainer .column
+{
+  width: calc( 100% / 3 );
+}
+
+#detail .timespan .videoContainer .column video
+{
+  width: 100%;
+  height: auto;
+  cursor: pointer;
+}
