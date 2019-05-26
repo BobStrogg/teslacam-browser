@@ -1,116 +1,171 @@
-exports.extractDate = ( match, hasSeconds = false ) =>
+( function ( root, factory )
 {
-    var year = Number( match[ 1 ] )
-    var month = Number( match[ 2 ] ) - 1
-    var day = Number( match[ 3 ] )
-    var hour = Number( match[ 4 ] )
-    var minute = Number( match[ 5 ] )
-    var second = hasSeconds ? Number( match[ 6 ] ) : 0
-
-    return new Date( year, month, day, hour, minute, second )
-}
-
-exports.groupBy = ( list, keyGetter ) =>
+	if ( typeof define === 'function' && define.amd ) define( [], factory );
+	else if ( typeof exports === 'object' ) module.exports = factory();
+	else root.helpers = factory();
+}( typeof self !== 'undefined' ? self : this, function ()
 {
-    const map = new Map();
+	const folderRegex = /(?<y>\d+)-(?<m>\d+)-(?<d>\d+)_(?<h>\d+)-(?<mm>\d+)(?:-(?<s>\d+))?$/g;
+	const clipRegex = /(?<y>\d+)-(?<m>\d+)-(?<d>\d+)_(?<h>\d+)-(?<mm>\d+)(?:-(?<s>\d+))?-(?<c>.*).mp4$/g;
 
-    list.forEach( ( item ) =>
-    {
-        const key = keyGetter( item );
-        const collection = map.get( key );
-
-        if ( !collection ) map.set( key, [ item ] );
-        else collection.push(item);
-    });
-
-    return map;
-}
-
-exports.addElement = ( container, name, attributes ) =>
-{
-    var element = document.createElement( name )
-
-    container.appendChild( element )
-
-    if ( attributes )
-    {
-        for ( var key in attributes ) element.setAttribute( key, attributes[ key ] )
-    }
-
-    return element
-}
-
-exports.addControls = ( container, videos, onCopy = null, onDelete = null ) =>
-{
-	if ( onDelete )
+	function matchRegex( regex, value )
 	{
-		var deleteButton = exports.addElement( container, "button", { type: "button", class: "delete" } )
+		var result = regex.exec( value )
 
-		deleteButton.innerText = "Delete"
-		deleteButton.addEventListener( "click", onDelete )
+		regex.lastIndex = 0
+
+		return result;
 	}
 
-	if ( onCopy )
-	{
-		var copy = exports.addElement( container, "button", { type: "button", class: "copy" } )
+	var matchFolder = ( folder ) => matchRegex( folderRegex, folder )
+	var matchClip = ( file ) => matchRegex( clipRegex, file )
 
-		copy.innerText = "Copy path"
-		copy.addEventListener( "click", onCopy )
+	function extractDate( match )
+	{
+		var year = Number( match.groups[ "y" ] )
+		var month = Number( match.groups[ "m" ] ) - 1
+		var day = Number( match.groups[ "d" ] )
+		var hour = Number( match.groups[ "h" ] )
+		var minute = Number( match.groups[ "mm" ] )
+		var second = match.groups[ "s" ] ? Number( match.groups[ "s" ] ) : 0
+
+		return new Date( year, month, day, hour, minute, second )
 	}
 
-	var playPause = exports.addElement( container, "button", { type: "button", class: "playPause" } )
-	var scrub = exports.addElement( container, "input", { type: "range", value: 0, class: "scrub" } )
-
-	playPause.innerText = "Play"
-
-	playPause.addEventListener( "click", ( e, ev ) => videos.forEach( v =>
-		{
-			if ( v.paused ) { v.play(); playPause.innerText = "Pause"; }
-			else { v.pause(); playPause.innerText = "Play"; }
-		} ) )
-
-	scrub.addEventListener( "input", ( e, ev ) =>
+	function groupBy( list, keyGetter )
 	{
-		var duration = 0.0
+		const map = new Map();
 
-		videos.forEach( v => { if ( !isNaN( v.duration ) ) duration = Math.max( duration, v.duration ) } )
-	
-		videos.forEach( v =>
+		list.forEach( ( item ) =>
 		{
-			if ( !isNaN( v.duration ) ) v.currentTime = Math.min( v.duration, duration * ( scrub.value / 100 ) )
-		} )
-	 } )
+			const key = keyGetter( item );
+			const collection = map.get( key );
 
-	function updateScrub()
+			if ( !collection ) map.set( key, [ item ] );
+			else collection.push(item);
+		});
+
+		return map;
+	}
+
+	function groupFiles( folder, files )
 	{
-		var duration = 0.0
-		var total = 0.0
-		var count = 0
+		var fileInfos = []
 
-		for ( var v of videos )
+		for ( var file of files )
 		{
-			if ( !isNaN( v.duration ) )
+			var match = matchClip( file )
+
+			if ( match && match.length > 0 )
 			{
-				duration = Math.max( duration, v.duration )
-				total += v.currentTime
-				++ count
+				var date = extractDate( match )
+				var camera = match.groups[ "c" ]
+				var filePath = folder + "/" + file // path.join( folder, file )
+
+				fileInfos.push( { date: date, camera: camera, file: filePath } )
 			}
 		}
 
-		if ( count > 0 ) scrub.value = ( total / count ) / duration * 100
+		fileInfos.sort( ( f1, f2 ) => f1.date.getTime() - f2.date.getTime() )
+
+		return groupBy( fileInfos, f => f.date.toString() )
 	}
 
-	setInterval( updateScrub, 250 )
-}
+	function addControls( container, videos, onCopy = null, onDelete = null )
+	{
+		if ( onDelete )
+		{
+			container.find( ".delete" ).click( onDelete )
+		}
 
-exports.isInViewport = ( elem ) =>
-{
-	var bounding = elem.getBoundingClientRect()
+		if ( onCopy )
+		{
+			container.find( ".copy" ).click( onCopy )
+		}
 
-    return (
-        bounding.top >= 0 &&
-        bounding.left >= 0 &&
-        bounding.bottom <= ( window.innerHeight || document.documentElement.clientHeight ) &&
-        bounding.right <= ( window.innerWidth || document.documentElement.clientWidth )
-    )
-}
+		var playPause = container.find( ".playPause" )
+
+		playPause.click( ( e, ev ) => videos.each( ( i, v ) =>
+			{
+				if ( v.paused ) { v.play(); playPause.text( "Pause" ); }
+				else { v.pause(); playPause.text( "Play" ); }
+			} ) )
+
+		var scrub = container.find( ".scrub" )
+
+		scrub.on( "input", ( e, ev ) =>
+		{
+			var duration = 0.0
+
+			videos.each( ( i, v ) => { if ( !isNaN( v.duration ) ) duration = Math.max( duration, v.duration ) } )
+		
+			videos.each( ( i, v ) =>
+			{
+				if ( !isNaN( v.duration ) ) v.currentTime = Math.min( v.duration, duration * ( scrub.val() / 100 ) )
+			} )
+		} )
+
+		function updateScrub()
+		{
+			var duration = 0.0
+			var total = 0.0
+			var count = 0
+
+			videos.each( ( i, v ) =>
+			{
+				if ( !isNaN( v.duration ) )
+				{
+					duration = Math.max( duration, v.duration )
+					total += v.currentTime
+					++ count
+				}
+			} )
+
+			if ( count > 0 ) scrub.val( ( total / count ) / duration * 100 )
+		}
+
+		setInterval( updateScrub, 250 )
+	}
+
+	function isInViewport( elem )
+	{
+		var bounding = elem.getBoundingClientRect()
+
+		return (
+			bounding.top >= 0 &&
+			bounding.left >= 0 &&
+			bounding.bottom <= ( window.innerHeight || document.documentElement.clientHeight ) &&
+			bounding.right <= ( window.innerWidth || document.documentElement.clientWidth )
+		)
+	}
+
+	function getTimes( dateGroups, date )
+	{
+		var times = []
+
+		var timeValues = dateGroups.get( date.toDateString() )
+
+		if ( timeValues )
+		{
+			for ( var time of timeValues )
+			{
+				var name = new Date( time.date ).toString()
+
+				if ( time.recent ) name += " (Recent)"
+
+				times.push( { time: time, name: name } )
+			}
+		}
+
+		return times
+	}
+
+	return {
+		matchFolder: matchFolder,
+		matchClip: matchClip,
+		extractDate: extractDate,
+		groupBy: groupBy,
+		groupFiles: groupFiles,
+		getTimes: getTimes
+	}
+} ) );

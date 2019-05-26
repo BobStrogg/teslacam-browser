@@ -1,263 +1,135 @@
 <!DOCTYPE html>
 <html>
+
   <head>
+
     <meta charset="UTF-8">
     <title>TeslaCam Browser</title>
     <link rel="stylesheet" href="node_modules/flatpickr/dist/flatpickr.min.css">
-    <style>
-      html, body
-      {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        font-family: Arial, Helvetica, sans-serif;
-        color: darkslategray;
-      }
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="app.css" />
+    <script>const $ = require( "jquery" );</script>
+    <script>require( "bootstrap" );</script>
+    <script type="text/javascript" src="node_modules/vue/dist/vue.js"></script>
+    <script type="text/javascript" src="node_modules/flatpickr/dist/flatpickr.min.js"></script>
+    <script type="text/javascript" src="renderer-helpers.js"></script>
+    <script>const ui = require( "./ui" );</script>
 
-      .leftMargin
-      {
-        margin-left: 10px;
-      }
-
-      .navigation
-      {
-        position: absolute;
-        top: 0px;
-        left: 0px;
-        right: 0px;
-        padding: 10px;
-        background: #FFFFFFF0;
-        white-space: nowrap;
-      }
-
-      .navigation .heading
-      {
-        font-size: 32pt;
-      }
-
-      .navigation .version
-      {
-        margin-left: 10px;
-        font-size: 24pt;
-        color: lightgray;
-      }
-
-      .navigation .credits
-      {
-        margin-left: 10px;
-        font-size: 12pt;
-        color: darkgray;
-      }
-
-      .navigation .donate
-      {
-        position: absolute;
-        right: 0px;
-        top: 10px;
-      }
-
-      .navigation .openButton
-      {
-        background-color: #008CBA; /* Blue */
-        border: none;
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-      }
-
-      .navigation .label
-      {
-        color: darkgrey;
-      }
-
-      .navigation .value
-      {
-      }
-
-      .navigation .status
-      {
-      }
-
-      .navigation .dates
-      {
-      }
-
-      .navigation .times
-      {
-      }
-
-      .navigation .copyButton
-      {
-        /*background-color: #f44336; /* Red */
-        background-color: #008CBA; /* Blue */
-        border: none;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 5px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-      }
-
-      .page
-      {
-        position: absolute;
-        top: 0px;
-        left: 10px;
-        right: 10px;
-        bottom: 0px;
-        overflow-y: auto;
-      }
-
-      .page .videos
-      {
-        margin-top: 105px;
-        margin-bottom: 10px;
-      }
-
-      .page .videos .timespan
-      {
-        position: relative;
-      }
-
-      .page .videos .timespan .titleContainer
-      {
-        padding: 10px 10px;
-        border-radius: 5px;
-        background-color: lightgrey;
-        margin-top: 10px;
-        margin-bottom: 5px;
-        white-space: nowrap;
-      }
-    
-      .page .videos .timespan .titleContainer .title
-      {
-        cursor: pointer;
-      }
-
-      .page .videos .timespan .titleContainer .controls
-      {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        bottom: 10px;
-      }
-
-      .page .videos .timespan .titleContainer .controls .scrub
-      {
-        vertical-align: middle;
-        margin-left: 10px;
-        outline: none;
-      }
-
-      .page .videos .timespan .titleContainer .controls .playPause
-      {
-        vertical-align: middle;
-        background-color: #4CAF50; /* Green */
-        border: none;
-        color: white;
-        padding: 3px 10px;
-        border-radius: 5px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        margin-left: 10px;
-      }
-
-      .page .videos .timespan .titleContainer .controls .copy
-      {
-        vertical-align: middle;
-        /*background-color: #f44336; /* Red */
-        background-color: #008CBA; /* Blue */
-        border: none;
-        color: white;
-        padding: 3px 10px;
-        border-radius: 5px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        margin-left: 10px;
-      }
-
-      .page .videos .timespan .titleContainer .controls .delete
-      {
-        vertical-align: middle;
-        background-color: #f44336; /* Red */
-        /*background-color: #008CBA; /* Blue */
-        border: none;
-        color: white;
-        padding: 3px 10px;
-        border-radius: 5px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        margin-left: 10px;
-      }
-
-      .page .videos .container
-      {
-        width: 100%;
-      }
-
-      .page .videos .container .column
-      {
-        width: calc( 100% / 3 );
-        float: left;
-      }
-
-      .page .videos .container .column video
-      {
-        width: 100%;
-        height: auto;
-        cursor: pointer;
-      }
-
-      .page .videos .container .end
-      {
-        float: none;
-        clear: both;
-      }
-    </style>
   </head>
+
   <body>
 
-    <div id="page" class="page">
-      <div id="videos" class="videos"></div>
+    <div id="root" class="d-flex flex-column">
+
+        <div id="heading" class="d-flex justify-content-between">
+  
+          <div class="d-flex">
+            <div class="p-2 align-self-baseline text-nowrap">
+                <span class="heading" @click="showSidebar = !showSidebar"><a href="#">{{ showSidebar ? "←" : "→" }}</a> TeslaCam Browser</span>
+            </div>
+            <div class="p-2 align-self-baseline text-nowrap">
+                <span class="version" id="version">{{ args.version }}</span>
+            </div>
+            <div class="p-2 align-self-baseline text-nowrap">
+                <span class="credits">by Chris Cavanagh</span>
+            </div>
+          </div>
+  
+          <div class="p-2 donate">
+            <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+              <input type="hidden" name="cmd" value="_donations" />
+              <input type="hidden" name="business" value="32J86B5QYPD6Y" />
+              <input type="hidden" name="currency_code" value="USD" />
+              <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+              <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
+            </form>
+          </div>
+  
+        </div>
+  
+        <div id="content" class="d-flex wrapper">
+  
+          <nav id="sidebar" class="d-flex flex-column align-items-start" :class="{ hidden: !showSidebar }">
+  
+            <div class="d-flex flex-column navigation">
+  
+              <div class="px-2 mb-2">
+                <button id="openButton" type="button" class="btn btn-primary" @click="openFolder()">Open...</button>
+                <button id="browseButton" type="button" class="btn btn-primary" @click="openBrowser()">Browse</button>
+              </div>
+              <div class="px-2 mb-2">
+                <input id="calendar" class="flatpickr flatpickr-input dates form-control" type="text" placeholder="Select Date.." readonly="readonly"/>
+              </div>
+              <div class="px-2 mb-2">
+                <select v-model="selectedPath" class="times form-control">
+                    <option v-for="t in times" v-bind:value="t.time.relative">{{ t.name }}</option>
+                </select>
+              </div>
+              <div class="px-2 mb-2">
+                <button id="deleteButton" class="btn btn-danger" @click="deleteFolder( selectedPath )">Delete folder</button>
+                <button id="copyButton" class="btn btn-info" @click="copyPath( selectedPath )">Copy path</button>
+              </div>
+    
+            </div>
+  
+          </nav>
+  
+          <div id="detail" class="d-flex flex-column flex-grow-1">
+  
+            <div id="videos">
+  
+              <div v-for="timespan in timespans" class="timespan card mb-2 mx-2">
+                <div class="d-flex align-items-center titleContainer card-header">
+                  <div class="px-2 flex-grow-1 title" title="Show / hide" @click="timespan.visible = !timespan.visible"><a href="#">{{timespan.visible ? "↑" : "↓"}}</a> {{timespan.title}}</div>
+                  <div class="px-2 controls">
+                    <button class="btn btn-danger delete" @click="deleteFiles( timespan )">Delete</button>
+                    <button class="btn btn-info copy" @click="copyFilePaths( timespan )">Copy path</button>
+                    <button class="btn btn-success playPause" @click="playPause( timespan )">{{ timespan.playing ? "Pause" : "Play" }}</button>
+                  </div>
+                  <div class="px-2 flex-grow-1 controls" v-if="timespan.visible">
+                    <input class="custom-range scrub" v-model="timespan.scrub" type="range" @input="timespan.playing = false"></input>
+                  </div>
+                </div>
+                <transition appear name="slide-fade">
+                  <div v-if="timespan.visible">
+                    <videos :timespan="timespan"></videos>
+                  </div>
+                </transition>
+              </div>
+  
+            </div>
+  
+          </div>
+  
+        </div>
+  
+      </div>
+
     </div>
 
-    <!--div class="blur"></div-->
-    <div class="navigation">
-      <div class="donate">
-        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
-          <input type="hidden" name="cmd" value="_donations" />
-          <input type="hidden" name="business" value="32J86B5QYPD6Y" />
-          <input type="hidden" name="item_name" value="Development of TeslaCam Browser application" />
-          <input type="hidden" name="currency_code" value="USD" />
-          <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
-          <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
-        </form>
-      </div>
-      <div>
-        <span class="heading">TeslaCam Browser</span>
-        <span class="version" id="version"></span>
-        <span class="credits">by Chris Cavanagh</span>
-      </div>
-      <!-- All of the Node.js APIs are available in this renderer process. -->
-      <button id="openButton" class="openButton">Open...</button>
-      <span id="status" class="status leftMargin"></span>
-      <input id="calendar" class="flatpickr flatpickr-input dates leftMargin" type="text" placeholder="Select Date.." readonly="readonly"/>
-      <select id="times" class="times leftMargin"></select>
-      <button id="copyButton" class="copyButton leftMargin">Copy path</button>
-    </div>
+    <script type="text/javascript">
+      ( function ()
+      {
+          const { ipcRenderer } = require( "electron" )
+          const fs = require( "fs" )
 
-    <script>
-      // You can also require other files to run in this process
-      require('./renderer.js')
-    </script>
+          var vueApp = ui.initialize(
+          {
+              openFolder: success => success( ipcRenderer.sendSync( "open" ) ),
+              getFiles: ( path, success ) => fs.readdir( vueApp.args.folders[ 0 ] + "/" + path, ( err, dir ) => success( dir ) ),
+              getVideoPath: p => vueApp.args.folders[ 0 ] + "/" + p,
+              openBrowser: () => ipcRenderer.send( "browse" ),
+              deleteFiles: files => alert( `Delete ${files}` ),
+              copyFilePaths: filePaths => alert( `Copy file paths ${filePaths}` ),
+              deleteFolder: folder => alert( `Delete folder ${folder}` ),
+              copyPath: path => alert( `Copy path ${path}` )
+           } )
 
-</body>
+          vueApp.loaded( ipcRenderer.sendSync( "args" ) )
+      })();
+
+  </script>
+
+  </body>
+
 </html>
