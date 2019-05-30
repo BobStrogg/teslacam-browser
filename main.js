@@ -187,7 +187,19 @@ function initialize()
 
 	var lastFolders = settings.get( "folders" )
 
-	if ( lastFolders ) openFolders( lastFolders )
+	//If we have last folders, we need to make sure that the folder still exists before trying to open it
+	if ( lastFolders)
+	{
+		fs.stat(`${lastFolders}`, function(err) {
+			if (!err) {
+				console.log('Opening Last Folders');
+				openFolders( lastFolders )
+			}
+			else if (err.code === 'ENOENT') {
+				console.log(`Last folders: '${lastFolders}' doesn't exist anymore`);
+			}
+		});
+	} 
 
 	expressApp.get( "/", ( request, response ) =>
 	{
