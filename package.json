@@ -1,7 +1,7 @@
 {
   "name": "teslacam-browser",
   "productName": "TeslaCam Browser",
-  "version": "0.0.92",
+  "version": "0.0.942",
   "description": "A minimal TeslaCam Browser",
   "main": "main.js",
   "scripts": {
@@ -9,7 +9,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "release": "build",
-    "publish": "build --mac --win --linux --linux:arm -p always"
+    "publish": "build --mac --win --linux -p always"
   },
   "repository": "https://github.com/BobStrogg/teslacam-browser",
   "keywords": [
