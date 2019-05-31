@@ -62,7 +62,7 @@
 				var camera = match.groups[ "c" ]
 				var filePath = folder + "/" + file // path.join( folder, file )
 
-				fileInfos.push( { date: date, camera: camera, file: filePath } )
+				fileInfos.push( { date: date, camera: camera, file: filePath, fileName: file } )
 			}
 		}
 
@@ -71,60 +71,25 @@
 		return groupBy( fileInfos, f => f.date.toString() )
 	}
 
-	function addControls( container, videos, onCopy = null, onDelete = null )
+	function getTimes( dateGroups, date )
 	{
-		if ( onDelete )
+		var times = []
+
+		var timeValues = dateGroups.get( date.toDateString() )
+
+		if ( timeValues )
 		{
-			container.find( ".delete" ).click( onDelete )
+			for ( var time of timeValues )
+			{
+				var name = new Date( time.date ).toLocaleTimeString()
+
+				if ( time.recent ) name += " (Recent)"
+
+				times.push( { time: time, name: name } )
+			}
 		}
 
-		if ( onCopy )
-		{
-			container.find( ".copy" ).click( onCopy )
-		}
-
-		var playPause = container.find( ".playPause" )
-
-		playPause.click( ( e, ev ) => videos.each( ( i, v ) =>
-			{
-				if ( v.paused ) { v.play(); playPause.text( "Pause" ); }
-				else { v.pause(); playPause.text( "Play" ); }
-			} ) )
-
-		var scrub = container.find( ".scrub" )
-
-		scrub.on( "input", ( e, ev ) =>
-		{
-			var duration = 0.0
-
-			videos.each( ( i, v ) => { if ( !isNaN( v.duration ) ) duration = Math.max( duration, v.duration ) } )
-		
-			videos.each( ( i, v ) =>
-			{
-				if ( !isNaN( v.duration ) ) v.currentTime = Math.min( v.duration, duration * ( scrub.val() / 100 ) )
-			} )
-		} )
-
-		function updateScrub()
-		{
-			var duration = 0.0
-			var total = 0.0
-			var count = 0
-
-			videos.each( ( i, v ) =>
-			{
-				if ( !isNaN( v.duration ) )
-				{
-					duration = Math.max( duration, v.duration )
-					total += v.currentTime
-					++ count
-				}
-			} )
-
-			if ( count > 0 ) scrub.val( ( total / count ) / duration * 100 )
-		}
-
-		setInterval( updateScrub, 250 )
+		return times
 	}
 
 	function isInViewport( elem )
@@ -139,33 +104,13 @@
 		)
 	}
 
-	function getTimes( dateGroups, date )
-	{
-		var times = []
-
-		var timeValues = dateGroups.get( date.toDateString() )
-
-		if ( timeValues )
-		{
-			for ( var time of timeValues )
-			{
-				var name = new Date( time.date ).toString()
-
-				if ( time.recent ) name += " (Recent)"
-
-				times.push( { time: time, name: name } )
-			}
-		}
-
-		return times
-	}
-
 	return {
 		matchFolder: matchFolder,
 		matchClip: matchClip,
 		extractDate: extractDate,
 		groupBy: groupBy,
 		groupFiles: groupFiles,
-		getTimes: getTimes
+		getTimes: getTimes,
+		isInViewport: isInViewport
 	}
 } ) );

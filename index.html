@@ -1,135 +1,171 @@
 <!DOCTYPE html>
 <html>
 
-  <head>
+<head>
 
-    <meta charset="UTF-8">
-    <title>TeslaCam Browser</title>
-    <link rel="stylesheet" href="node_modules/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="app.css" />
-    <script>const $ = require( "jquery" );</script>
-    <script>require( "bootstrap" );</script>
-    <script type="text/javascript" src="node_modules/vue/dist/vue.js"></script>
-    <script type="text/javascript" src="node_modules/flatpickr/dist/flatpickr.min.js"></script>
-    <script type="text/javascript" src="renderer-helpers.js"></script>
-    <script>const ui = require( "./ui" );</script>
+  <meta charset="UTF-8">
+  <title>TeslaCam Browser</title>
+  <link rel="stylesheet" href="node_modules/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="app.css" />
+  <script type="text/javascript" src="node_modules/vue/dist/vue.js"></script>
+  <script type="text/javascript" src="node_modules/flatpickr/dist/flatpickr.min.js"></script>
+  <script>const $ = require("jquery");</script>
+  <script>const bootstrap = require("bootstrap");</script>
+  <script>const helpers = require("./helpers");</script>
+  <script>const ui = require("./ui");</script>
 
-  </head>
+</head>
 
-  <body>
+<body>
 
-    <div id="root" class="d-flex flex-column">
+  <div id="root" class="d-flex flex-column">
 
-        <div id="heading" class="d-flex justify-content-between">
-  
-          <div class="d-flex">
-            <div class="p-2 align-self-baseline text-nowrap">
-                <span class="heading" @click="showSidebar = !showSidebar"><a href="#">{{ showSidebar ? "←" : "→" }}</a> TeslaCam Browser</span>
-            </div>
-            <div class="p-2 align-self-baseline text-nowrap">
-                <span class="version" id="version">{{ args.version }}</span>
-            </div>
-            <div class="p-2 align-self-baseline text-nowrap">
-                <span class="credits">by Chris Cavanagh</span>
-            </div>
-          </div>
-  
-          <div class="p-2 donate">
-            <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
-              <input type="hidden" name="cmd" value="_donations" />
-              <input type="hidden" name="business" value="32J86B5QYPD6Y" />
-              <input type="hidden" name="currency_code" value="USD" />
-              <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
-              <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
-            </form>
-          </div>
-  
+    <div id="heading" class="d-flex justify-content-between">
+
+      <div class="d-flex">
+        <div class="p-2 align-self-baseline text-nowrap">
+          <span class="heading" @click="showSidebar = !showSidebar"><a href="#">{{ showSidebar ? "←" : "→" }}</a>
+            TeslaCam Browser</span>
         </div>
-  
-        <div id="content" class="d-flex wrapper">
-  
-          <nav id="sidebar" class="d-flex flex-column align-items-start" :class="{ hidden: !showSidebar }">
-  
-            <div class="d-flex flex-column navigation">
-  
-              <div class="px-2 mb-2">
-                <button id="openButton" type="button" class="btn btn-primary" @click="openFolder()">Open...</button>
-                <button id="browseButton" type="button" class="btn btn-primary" @click="openBrowser()">Browse</button>
-              </div>
-              <div class="px-2 mb-2">
-                <input id="calendar" class="flatpickr flatpickr-input dates form-control" type="text" placeholder="Select Date.." readonly="readonly"/>
-              </div>
-              <div class="px-2 mb-2">
-                <select v-model="selectedPath" class="times form-control">
-                    <option v-for="t in times" v-bind:value="t.time.relative">{{ t.name }}</option>
-                </select>
-              </div>
-              <div class="px-2 mb-2">
-                <button id="deleteButton" class="btn btn-danger" @click="deleteFolder( selectedPath )">Delete folder</button>
-                <button id="copyButton" class="btn btn-info" @click="copyPath( selectedPath )">Copy path</button>
-              </div>
-    
-            </div>
-  
-          </nav>
-  
-          <div id="detail" class="d-flex flex-column flex-grow-1">
-  
-            <div id="videos">
-  
-              <div v-for="timespan in timespans" class="timespan card mb-2 mx-2">
-                <div class="d-flex align-items-center titleContainer card-header">
-                  <div class="px-2 flex-grow-1 title" title="Show / hide" @click="timespan.visible = !timespan.visible"><a href="#">{{timespan.visible ? "↑" : "↓"}}</a> {{timespan.title}}</div>
-                  <div class="px-2 controls">
-                    <button class="btn btn-danger delete" @click="deleteFiles( timespan )">Delete</button>
-                    <button class="btn btn-info copy" @click="copyFilePaths( timespan )">Copy path</button>
-                    <button class="btn btn-success playPause" @click="playPause( timespan )">{{ timespan.playing ? "Pause" : "Play" }}</button>
-                  </div>
-                  <div class="px-2 flex-grow-1 controls" v-if="timespan.visible">
-                    <input class="custom-range scrub" v-model="timespan.scrub" type="range" @input="timespan.playing = false"></input>
-                  </div>
-                </div>
-                <transition appear name="slide-fade">
-                  <div v-if="timespan.visible">
-                    <videos :timespan="timespan"></videos>
-                  </div>
-                </transition>
-              </div>
-  
-            </div>
-  
-          </div>
-  
+        <div class="p-2 align-self-baseline text-nowrap">
+          <span class="version" id="version">{{ args.version }}</span>
         </div>
-  
+        <div class="p-2 align-self-baseline text-nowrap">
+          <span class="credits">by Chris Cavanagh</span>
+        </div>
+      </div>
+
+      <div class="p-2 donate">
+        <div class="d-flex flex-row-reverse">
+          <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+            <input type="hidden" name="cmd" value="_donations" />
+            <input type="hidden" name="business" value="32J86B5QYPD6Y" />
+            <input type="hidden" name="currency_code" value="USD" />
+            <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0"
+              name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+            <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
+          </form>
+        </div>
+        <div class="d-flex flex-row custom-control custom-switch mr-2">
+          <input type="checkbox" v-model="combineClips" class="custom-control-input" id="combineClips">
+          <label class="custom-control-label" for="combineClips">Combine clips</label>
+        </div>
       </div>
 
     </div>
 
-    <script type="text/javascript">
-      ( function ()
-      {
-          const { ipcRenderer } = require( "electron" )
-          const fs = require( "fs" )
+    <div id="content" class="d-flex">
 
-          var vueApp = ui.initialize(
-          {
-              openFolder: success => success( ipcRenderer.sendSync( "open" ) ),
-              getFiles: ( path, success ) => fs.readdir( vueApp.args.folders[ 0 ] + "/" + path, ( err, dir ) => success( dir ) ),
-              getVideoPath: p => vueApp.args.folders[ 0 ] + "/" + p,
-              openBrowser: () => ipcRenderer.send( "browse" ),
-              deleteFiles: files => alert( `Delete ${files}` ),
-              copyFilePaths: filePaths => alert( `Copy file paths ${filePaths}` ),
-              deleteFolder: folder => alert( `Delete folder ${folder}` ),
-              copyPath: path => alert( `Copy path ${path}` )
-           } )
+      <nav id="sidebar" class="d-flex flex-column align-items-start" :class="{ hidden: !showSidebar }">
 
-          vueApp.loaded( ipcRenderer.sendSync( "args" ) )
-      })();
+        <div class="d-flex flex-column navigation">
+
+          <div class="px-2 mb-2">
+            <button id="openButton" type="button" class="btn btn-primary" @click="openFolder()">Open...</button>
+            <button id="browseButton" type="button" class="btn btn-primary" @click="openBrowser()">Browse</button>
+          </div>
+          <div class="px-2 mb-2">
+            {{ args && args.folderInfos ? args.folderInfos.length : 0 }}
+            event{{ args && args.folderInfos && args.folderInfos.length != 1 ? "s" : "" }},
+            {{ args && args.dates ? args.dates.length : 0 }} day{{ args && args.dates && args.dates != 1 ? "s" : "" }}
+          </div>
+          <div class="px-2 mb-2">
+            <input id="calendar" class="flatpickr flatpickr-input dates form-control" type="text"
+              placeholder="Select Date.." readonly="readonly" />
+          </div>
+          <div class="d-flex flex-column px-2 mb-2">
+            <div class="list-group list-group-flush overflow-auto times">
+              <a v-for="t in times" href="" class="list-group-item list-group-item-action"
+                :class="{active: t === selectedTime}" @click.prevent="selectedTime = t"
+                style="cursor: pointer;">{{ t.name }}</a>
+            </div>
+          </div>
+          <div class="px-2 mb-2">
+            <button id="deleteButton" class="btn btn-danger" @click="deleteFolder( selectedPath )">Delete
+              folder</button>
+            <button id="copyButton" class="btn btn-info" @click="copyPath( selectedPath )">Copy path</button>
+          </div>
+
+        </div>
+
+      </nav>
+
+      <div id="detail" class="d-flex flex-column flex-grow-1">
+
+        <div id="videos">
+
+          <div class="timespan card mb-2 mx-2" v-if="combineClips">
+            <div class="d-flex align-items-center titleContainer card-header">
+              <div class="px-2 controls">
+                <button class="btn btn-success playPause"
+                  @click="controls.playing = !controls.playing">{{ controls.playing ? "Pause" : "Play" }}</button>
+              </div>
+              <div class="px-2 flex-grow-1 controls">
+                <input class="custom-range scrub" v-model="currentTime" type="range" :max="duration"
+                  @input="controls.playing = false"></input>
+              </div>
+            </div>
+            <div class="videoContainer card-body">
+              <div class="text-center">{{ timespanTime( controls.timespan ) }}</div>
+              <video-group :controls="controls" :timespans="timespans"></video-group>
+            </div>
+          </div>
+
+          <div v-if="!combineClips">
+            <div v-for="timespan in timespans" class="timespan card mb-2 mx-2">
+              <div class="d-flex align-items-center titleContainer card-header">
+                <div class="px-2 flex-grow-1 title" title="Show / hide" @click="timespan.visible = !timespan.visible"><a
+                    href="#">{{timespan.visible ? "↑" : "↓"}}</a> {{timespan.title}}</div>
+                <div class="px-2 controls">
+                  <button class="btn btn-danger delete" @click="deleteFiles( timespan )">Delete</button>
+                  <button class="btn btn-info copy" @click="copyFilePaths( timespan )">Copy path</button>
+                  <button class="btn btn-success playPause"
+                    @click="playPause( timespan )">{{ timespan.playing ? "Pause" : "Play" }}</button>
+                </div>
+                <div class="px-2 flex-grow-1 controls" v-if="timespan.visible">
+                  <input class="custom-range scrub" v-model="timespan.currentTime" type="range" :max="timespan.duration"
+                    @input="scrubInput( timespan )"></input>
+                </div>
+              </div>
+              <div v-if="timespan.visible">
+                <div class="text-center">{{ timespanTime( timespan ) }}</div>
+                <videos :timespan="timespan"></videos>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script type="text/javascript">
+    (function () {
+      const { ipcRenderer } = require("electron")
+      const fs = require("fs")
+
+      var vueApp = ui.initialize(
+        {
+          openFolder: success => success(ipcRenderer.sendSync("open")),
+          getFiles: (path, success) => fs.readdir(vueApp.args.folders[0] + "/" + path, (err, dir) => success(dir)),
+          getVideoPath: p => vueApp.args.folders[0] + "/" + p,
+          openBrowser: () => ipcRenderer.send("browse"),
+          deleteFiles: files => ipcRenderer.send("deleteFiles", files),
+          copyFilePaths: filePaths => ipcRenderer.send("copyFilePaths", filePaths),
+          deleteFolder: folder => ipcRenderer.send("deleteFolder", folder),
+          copyPath: path => ipcRenderer.send("copyPath", path),
+          openExternal: path => ipcRenderer.send("openExternal", path)
+        })
+
+      vueApp.loaded(ipcRenderer.sendSync("args"))
+    })();
 
   </script>
 
-  </body>
+</body>
 
 </html>
