@@ -14,10 +14,17 @@
             {
                 args: { version: null },
                 showSidebar: true,
+                combineClips: true,
                 selectedDate: null,
                 times: [],
+                selectedTime: null,
                 selectedPath: null,
                 timespans: [],
+                controls:
+                {
+                    playing: false,
+                    timespan: null
+                },
                 playing: null
             },
             watch:
@@ -25,7 +32,15 @@
                 selectedDate: function( newDate, oldDate )
                 {
                     this.times = helpers.getTimes( this.args.dateGroups, newDate )
-                    this.selectedPath = ( this.times.length > 0 ) ? this.times[ 0 ].time.relative : null
+                    this.selectedTime = ( this.times.length > 0 ) ? this.times[ 0 ] : null
+                    this.selectedPath = ( this.selectedTime ) ? this.selectedTime.time.relative : null
+                },
+                selectedTime: function( newTime, oldTime )
+                {
+                    var index = this.times.indexOf( newTime )
+                    var time = this.times[ index ]
+
+                    this.selectedPath = time.time.relative
                 },
                 selectedPath: function( newPath, oldPath )
                 {
@@ -38,9 +53,13 @@
 
                         return {
                             title: key,
+                            time: new Date( key ),
                             scrub: 0,
                             playing: false,
                             visible: false,
+                            currentTime: 0,
+                            duration: null,
+                            ended: false,
                             views: views
                         }
                     }
@@ -50,7 +69,78 @@
                             this.timespans = Array.from( helpers.groupFiles( handlers.getVideoPath( newPath ), files ) )
                                 .map( ( [ key, value ] ) => makeTimespan( key, value ) )
                         } )
-                        //.fail( ( jqxhr, textStatus, error ) => console.log( error ) )
+                },
+                "controls.timespan.ended": function( ended, oldEnded )
+                {
+                    if ( ended && this.controls.playing )
+                    {
+                        var index = this.timespans.indexOf( this.controls.timespan )
+
+                        if ( index < this.timespans.length - 1 )
+                        {
+                            var timespan = this.timespans[ index + 1 ]
+
+                            this.controls.timespan = timespan
+
+                            timespan.currentTime = 0
+                            timespan.ended = false
+                            timespan.playing = true
+                        }
+                        else
+                        {
+                            this.controls.playing = false
+                        }
+                    }
+                },
+                "controls.timespan.playing": function( playing, oldPlaying )
+                {
+                    this.controls.playing = playing
+                },
+                duration: function( duration )
+                {
+                    this.controls.timespan = ( this.timespans.length > 0 ) ? this.timespans[ 0 ] : null
+                    this.controls.playing = false
+                    this.controls.scrub = 0
+                }
+            },
+            computed:
+            {
+                duration: function()
+                {
+                    return this.timespans.reduce( ( t, ts ) => t + ts.duration, 0 )
+                },
+                currentTime:
+                {
+                    get: function()
+                    {
+                        var startTime = 0
+
+                        for ( var timespan of this.timespans )
+                        {
+                            if ( timespan == this.controls.timespan )
+                            {
+                                return startTime + Number( timespan.currentTime )
+                            }
+    
+                            startTime += timespan.duration
+                        }
+                    },
+                    set: function( newTime )
+                    {
+                        var startTime = 0
+
+                        for ( var timespan of this.timespans )
+                        {
+                            if ( newTime < startTime + timespan.duration )
+                            {
+                                this.controls.timespan = timespan
+                                timespan.currentTime = newTime - startTime
+                                break
+                            }
+
+                            startTime += timespan.duration
+                        }
+                    }
                 }
             },
             methods:
@@ -85,19 +175,20 @@
                 },
                 playPause: function( timespan )
                 {
-                    if ( !timespan.playing )
+                    if ( this.controls.timespan && this.controls.timespan != timespan )
                     {
-                        if ( this.playing ) this.playing.playing = false
+                        this.controls.timespan.playing = false
+                    }
 
-                        this.playing = timespan
-                        timespan.playing = true
-                        timespan.visible = true
-                    }
-                    else
-                    {
-                        this.playing = null
-                        timespan.playing = false
-                    }
+                    if ( this.controls ) this.controls.timespan = timespan
+
+                    timespan.visible |= ( timespan.playing = !timespan.playing )
+                },
+                scrubInput: function( timespan )
+                {
+                    timespan.playing = false
+
+                    if ( this.controls ) this.controls.timespan = timespan
                 },
                 deleteFiles: function( timespan )
                 {
@@ -113,6 +204,8 @@
                     var files = timespan.views.map( v => v.file )
 
                     handlers.copyFilePaths( files )
+
+                    alert( "Copied file paths to clipboard" )
                 },
                 deleteFolder: function( folder )
                 {
@@ -124,61 +217,60 @@
                 copyPath: function( path )
                 {
                     handlers.copyPath( path )
+
+                    alert( "Copied folder path to clipboard" )
+                },
+                timespanTime: function( timespan )
+                {
+                    if ( !timespan ) return null
+
+                    var time = new Date( timespan.time )
+
+                    time.setSeconds( time.getSeconds() - timespan.duration + Number( timespan.currentTime ) )
+
+                    return time
                 }
             }
         });
     }
 
-    function createVideosComponent( handlers )
+    function createVideoGroupComponent( handlers )
     {
-        return Vue.component( "videos",
+        return Vue.component( "VideoGroup",
         {
-            props: [ "timespan" ],
+            props: [ "controls", "timespans" ],
             data: function()
             {
-                return { error: null }
+                return {
+                    error: null,
+                    duration: null
+                }
             },
             template:
-                `<div v-if="timespan.visible">
-                    <div class="d-flex videoContainer card-body">
-                        <div v-for="view in timespan.views" class="column">
-                            <video :ref="view.camera" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" @timeupdate="timeChanged( timespan, view.camera, $event.target )" @pause="timespan.playing = false" ></video>
+                `<div>
+                    <div v-for="timespan in timespans" v-show="timespan === controls.timespan">
+                        <div class="d-flex">
+                            <div v-for="view in timespan.views" class="column ml-1">
+                                <synchronized-video :timespan="timespan" :view="view"></synchronized-video>
+                                <div :title="view.fileName" class="text-center">{{ view.fileName }}</div>
+                            </div>
+                        </div>
+                        <div class="alert alert-danger error" v-show="error">
+                            <div>{{ error }}</div>
+                            <div @click="openBrowser" style="cursor: pointer;">Try external browser</div>
                         </div>
                     </div>
-                    <div class="alert alert-danger error" v-show="error"><div>{{ error }}</div><div @click="openBrowser" style="cursor: pointer;">Try external browser</div></div>
                 </div>`,
             watch:
             {
-                "timespan.scrub":
+                "controls.playing": function( playing, oldPlaying )
                 {
-                    handler: function( scrub )
+                    for ( var timespan of this.timespans )
                     {
-                        var videos = Object.values( this.$refs ).map( v => v[ 0 ] ).filter( v => v && v.paused )
-                        var duration = 0.0
-    
-                        videos.forEach( v =>
-                        {
-                            if ( !isNaN( v.duration ) ) duration = Math.max( duration, v.duration )
-                        } )
-    
-                        videos.forEach( v =>
-                        {
-                            if ( !isNaN( v.duration ) ) v.currentTime = Math.min( v.duration, duration * ( scrub / 100 ) )
-                        } )
-                    }
-                },
-                "timespan.playing":
-                {
-                    handler: function( playing )
-                    {
-                        for ( var video of Object.values( this.$refs ) )
-                        {
-                            if ( video.length > 0 )
-                            {
-                                if ( playing ) video[ 0 ].play().catch( e => this.error = e.message )
-                                else video[ 0 ].pause()
-                            }
-                        }
+                        timespan.ended = false
+                        timespan.playing = ( timespan == this.controls.timespan )
+                            ? playing
+                            : false
                     }
                 }
             },
@@ -203,6 +295,13 @@
     
                     return 0
                 },
+                durationChanged: function( timespan, camera, video )
+                {
+                    if ( camera == "front" )
+                    {
+                        this.duration = Math.max( this.duration, timespan.duration = video.duration )
+                    }
+                },
                 timeChanged: function( timespan, camera, video )
                 {
                     if ( camera == "front" && !video.paused )
@@ -214,12 +313,117 @@
         } )
     }
 
+    function createVideosComponent( handlers )
+    {
+        return Vue.component( "Videos",
+        {
+            props: [ "timespan" ],
+            data: function()
+            {
+                return {
+                    error: null,
+                    duration: null
+                }
+            },
+            template:
+                `<div>
+                    <div class="d-flex videoContainer card-body">
+                        <div v-for="view in timespan.views" class="column ml-1">
+                            <synchronized-video :timespan="timespan" :view="view"></synchronized-video>
+                            <div :title="view.fileName" class="text-center">{{ view.fileName }}</div>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger error" v-show="error"><div>{{ error }}</div><div @click="openBrowser" style="cursor: pointer;">Try external browser</div></div>
+                </div>`,
+            methods:
+            {
+                openBrowser: function()
+                {
+                    handlers.openBrowser()
+                },
+            }
+        } )
+    }
+
+    function createVideoComponent( handlers )
+    {
+        return Vue.component( "SynchronizedVideo",
+        {
+            props: [ "timespan", "view" ],
+            data: function()
+            {
+                return {
+                    error: null,
+                    duration: null
+                }
+            },
+            template:
+                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" preload="metadata" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" title="Open in file explorer" @click="openExternal"></video>`,
+            watch:
+            {
+                "timespan.playing":
+                {
+                    handler: function( playing, oldPlaying )
+                    {
+                        var video = this.$refs[ "video" ]
+
+                        if ( video )
+                        {
+                            if ( playing ) video.play().catch( e => this.error = e.message )
+                            else video.pause()
+                        }
+                    }
+                },
+                "timespan.currentTime":
+                {
+                    handler: function( currentTime, oldTime )
+                    {
+                        var video = this.$refs[ "video" ]
+
+                        if ( video && video.paused )
+                        {
+                            video.currentTime = currentTime
+                        }
+                    }
+                }
+            },
+            methods:
+            {
+                durationChanged: function( event )
+                {
+                    var video = event.target
+
+                    this.timespan.duration = Math.max( this.timespan.duration, video.duration )
+                },
+                timeChanged: function( event )
+                {
+                    var video = event.target
+
+                    if ( !video.paused )
+                    {
+                        this.timespan.currentTime = video.currentTime
+                    }
+                },
+                ended()
+                {
+                    this.timespan.playing = false
+                    this.timespan.ended = true
+                },
+                openExternal: function()
+                {
+                    handlers.openExternal( this.view.file )
+                }
+            }
+        } )
+    }
+
     function initialize( handlers )
     {
-        var vueApp = createVueApp( handlers )
+        var videoGroupComponent = createVideoGroupComponent( handlers )
         var videosComponent = createVideosComponent( handlers )
+        var videoComponent = createVideoComponent( handlers )
 
-        return vueApp
+        return createVueApp( handlers )
     }
 
     return {

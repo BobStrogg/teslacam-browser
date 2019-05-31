@@ -1,7 +1,7 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, dialog, ipcMain, shell } = require( "electron" )
+const { app, BrowserWindow, dialog, ipcMain, shell, clipboard } = require( "electron" )
 const menu = require( "./menu" )
-const helpers = require( "./renderer-helpers" )
+const helpers = require( "./helpers" )
 const { autoUpdater } = require( "electron-updater" )
 const settings = require( "electron-settings" )
 const fs = require( "fs" )
@@ -21,7 +21,7 @@ function createWindow()
 	mainWindow = new BrowserWindow(
 	{
 		width: 1000,
-		height: 600,
+		height: 700,
 		webPreferences:
 		{
 			nodeIntegration: true
@@ -185,36 +185,65 @@ function initialize()
 		shell.openExternal( `http://localhost:${port}` )
 	}
 
+	function deleteFiles( files )
+	{
+		for ( var file of files ) fs.unlinkSync( file )
+
+		var folderPath = path.dirname( files[ 0 ] )
+		var files = fs.readdirSync( folderPath )
+
+		if ( files.length < 1 ) fs.rmdirSync( folderPath )
+	}
+
+	function copyFilePaths( filePaths )
+	{
+		clipboard.writeText( filePaths ) 
+	}
+
+	function deleteFolder( folder )
+	{
+		fs.rmdirSync( folder )
+	}
+
+	function copyPath( path )
+	{
+		clipboard.writeText( path )
+	}
+
+	function openExternal( path )
+	{
+		shell.showItemInFolder( path )
+	}
+
 	var lastFolders = settings.get( "folders" )
 
 	//If we have last folders, we need to make sure that the folder still exists before trying to open it
-	if ( lastFolders)
+	if ( lastFolders )
 	{
-		fs.stat(`${lastFolders}`, function(err) {
-			if (!err) {
+		fs.stat( `${lastFolders}`, function(err)
+		{
+			if ( !err )
+			{
 				console.log('Opening Last Folders');
 				openFolders( lastFolders )
 			}
-			else if (err.code === 'ENOENT') {
-				console.log(`Last folders: '${lastFolders}' doesn't exist anymore`);
+			else if ( err.code === 'ENOENT' )
+			{
+				console.log( `Last folders: '${lastFolders}' doesn't exist anymore` );
 			}
 		});
 	} 
 
-	expressApp.get( "/", ( request, response ) =>
-	{
-		response.sendFile( __dirname + "/external.html" )
-	} )
+	expressApp.get( "/", ( request, response ) => response.sendFile( __dirname + "/external.html" ) )
+	expressApp.get( "/open", ( request, response ) => response.send( open() ) )
+	expressApp.get( "/args", ( request, response ) => response.send( args() ) )
 
-	expressApp.get( "/open", ( request, response ) =>
-	{
-		response.send( open() )
-	} )
-
-	expressApp.get( "/args", ( request, response ) =>
-	{
-		response.send( args() )
-	} )
+	expressApp.post( "/browse", ( request, response ) => browse() )
+	expressApp.post( "/deleteFiles", ( request, response, files ) => deleteFiles( files ) )
+	expressApp.post( "/copyFilePaths", ( request, response, filePaths ) => copyFilePaths( filePaths ) )
+	expressApp.post( "/deleteFolder", ( request, response, folder ) => deleteFolder( folder ) )
+	expressApp.post( "/copyPath", ( request, response, path ) => copyPath( path ) )
+	expressApp.post( "/openExternal", ( request, response, path ) => openExternal( path ) )
 
 	expressApp.use( "/files", ( request, response ) =>
 	{
@@ -225,17 +254,17 @@ function initialize()
 		response.send( fs.readdirSync( folder ) )
 	} )
 
-	expressApp.post( "/browse", ( request, response ) =>
-	{
-		browse()
-	} )
-
 	expressApp.use( "/content", express.static( __dirname ) )
 	expressApp.use( "/node_modules", express.static( __dirname + "/node_modules" ) )
 
 	ipcMain.on( "args", event => event.returnValue = args() )
 	ipcMain.on( "open", event => event.returnValue = open() )
 	ipcMain.on( "browse", event => browse() )
+	ipcMain.on( "deleteFiles", ( event, files ) => deleteFiles( files ) )
+	ipcMain.on( "copyFilePaths", ( event, filePaths ) => copyFilePaths( filePaths ) )
+	ipcMain.on( "deleteFolder", ( event, folder ) => deleteFolder( folder ) )
+	ipcMain.on( "copyPath", ( event, path ) => copyPath( path ) )
+	ipcMain.on( "openExternal", ( event, path ) => openExternal( path ) )
 
 	expressApp.listen( port, ( err ) =>
 	{
