@@ -62,7 +62,13 @@
 				var camera = match.groups[ "c" ]
 				var filePath = folder + "/" + file // path.join( folder, file )
 
-				fileInfos.push( { date: date, camera: camera, file: filePath, fileName: file } )
+				fileInfos.push(
+					{
+						date: date,
+						camera: camera,
+						file: filePath,
+						fileName: file
+					} )
 			}
 		}
 
