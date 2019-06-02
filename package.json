@@ -1,7 +1,7 @@
 {
   "name": "teslacam-browser",
   "productName": "TeslaCam Browser",
-  "version": "0.0.943",
+  "version": "0.0.944",
   "description": "A minimal TeslaCam Browser",
   "main": "main.js",
   "scripts": {
@@ -76,6 +76,7 @@
     "express": "^4.17.0",
     "flatpickr": "^4.5.7",
     "jquery": "^3.3.1",
+    "open-iconic": "^1.1.1",
     "popper.js": "^1.14.4",
     "serve-index": "^1.9.1",
     "vue": "^2.6.10",
