@@ -23,7 +23,8 @@
                 controls:
                 {
                     playing: false,
-                    timespan: null
+                    timespan: null,
+                    speed: 1
                 },
                 playing: null
             },
@@ -51,7 +52,7 @@
 
                         views.sort( ( v1, v2 ) => viewOrder.indexOf( v1.camera ) - viewOrder.indexOf( v2.camera ) )
 
-                        return {
+                        return {    // Timespan
                             title: key,
                             time: new Date( key ),
                             scrub: 0,
@@ -251,8 +252,8 @@
                     <div v-for="timespan in timespans" v-show="timespan === controls.timespan">
                         <div class="d-flex">
                             <div v-for="view in timespan.views" class="column ml-1">
-                                <synchronized-video :timespan="timespan" :view="view"></synchronized-video>
                                 <div :title="view.fileName" class="text-center">{{ view.fileName }}</div>
+                                <synchronized-video :timespan="timespan" :view="view" :playbackRate="controls.speed"></synchronized-video>
                             </div>
                         </div>
                         <div class="alert alert-danger error" v-show="error">
@@ -317,7 +318,7 @@
     {
         return Vue.component( "Videos",
         {
-            props: [ "timespan" ],
+            props: [ "controls", "timespan" ],
             data: function()
             {
                 return {
@@ -327,13 +328,16 @@
             },
             template:
                 `<div>
-                    <div class="d-flex videoContainer card-body">
+                    <div class="d-flex">
                         <div v-for="view in timespan.views" class="column ml-1">
-                            <synchronized-video :timespan="timespan" :view="view"></synchronized-video>
                             <div :title="view.fileName" class="text-center">{{ view.fileName }}</div>
+                            <synchronized-video :timespan="timespan" :view="view" :playbackRate="controls.speed"></synchronized-video>
                         </div>
                     </div>
-                    <div class="alert alert-danger error" v-show="error"><div>{{ error }}</div><div @click="openBrowser" style="cursor: pointer;">Try external browser</div></div>
+                    <div class="alert alert-danger error" v-show="error">
+                        <div>{{ error }}</div>
+                        <div @click="openBrowser" style="cursor: pointer;">Try external browser</div>
+                    </div>
                 </div>`,
             methods:
             {
@@ -349,16 +353,17 @@
     {
         return Vue.component( "SynchronizedVideo",
         {
-            props: [ "timespan", "view" ],
+            props: [ "timespan", "view", "playbackRate" ],
             data: function()
             {
                 return {
                     error: null,
-                    duration: null
+                    duration: null,
+                    timeout: null
                 }
             },
             template:
-                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" preload="metadata" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" title="Open in file explorer" @click="openExternal"></video>`,
+                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" preload="metadata" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" title="Open in file explorer" @click="openExternal"></video>`,
             watch:
             {
                 "timespan.playing":
@@ -369,8 +374,46 @@
 
                         if ( video )
                         {
-                            if ( playing ) video.play().catch( e => this.error = e.message )
-                            else video.pause()
+                            if ( playing )
+                            {
+                                video.playbackRate = this.playbackRate
+
+                                var currentTime = this.timespan.currentTime - ( this.timespan.duration - video.duration )
+
+                                if ( currentTime < 0 )
+                                {
+                                    var delay = -currentTime / this.playbackRate
+
+                                    console.log( `Delaying ${this.view.file} for ${delay}` )
+                                    this.timeout = window.setTimeout(
+                                        () =>
+                                        {
+                                            this.timeout = null
+                                            video.style.opacity = 1.0
+                                            video.play().catch( e => this.error = e.message )
+                                        },
+                                        delay * 1000 )
+                                }
+                                else
+                                {
+                                    console.log( `Playing ${this.view.file}` )
+                                    this.timeout = null
+                                    video.style.opacity = 1.0
+                                    video.play().catch( e => this.error = e.message )
+                                }
+                            }
+                            else
+                            {
+                                if ( this.timeout )
+                                {
+                                    window.clearTimeout( this.timeout )
+                                    this.timeout = null
+                                }
+                                else
+                                {
+                                    video.pause()
+                                }
+                            }
                         }
                     }
                 },
@@ -380,9 +423,16 @@
                     {
                         var video = this.$refs[ "video" ]
 
-                        if ( video && video.paused )
+                        if ( video && !this.timespan.playing )
                         {
-                            video.currentTime = currentTime
+                            var adjustedTime = currentTime - ( this.timespan.duration - video.duration )
+
+                            if ( !isNaN( adjustedTime ) && isFinite( adjustedTime ) && adjustedTime >= 0 )
+                            {
+                                video.currentTime = adjustedTime
+                                video.style.opacity = 1.0
+                            }
+                            else video.style.opacity = 0.3
                         }
                     }
                 }
@@ -399,7 +449,7 @@
                 {
                     var video = event.target
 
-                    if ( !video.paused )
+                    if ( !video.paused && video.duration == this.timespan.duration )
                     {
                         this.timespan.currentTime = video.currentTime
                     }

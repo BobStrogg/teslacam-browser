@@ -3,6 +3,11 @@ html, body
     height: 100%;
 }
 
+[v-cloak]
+{
+  display: none;
+}
+
 #root
 {
     height: 100%;
