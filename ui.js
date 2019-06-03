@@ -195,7 +195,7 @@
                 {
                     var files = timespan.views.map( v => v.file )
 
-                    if ( confirm( `Are you sure you want to delete ${files.length} files?` ) )
+                    if ( confirm( `Are you sure you want to delete ${files.length} files from ${timespan.title}?` ) )
                     {
                         handlers.deleteFiles( files )
                     }

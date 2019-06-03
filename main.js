@@ -187,27 +187,44 @@ function initialize()
 
 	function deleteFiles( files )
 	{
+		console.log( `Deleting files: ${files}` )
+
 		for ( var file of files ) fs.unlinkSync( file )
+
+		console.log( `Deleted files: ${files}` )
 
 		var folderPath = path.dirname( files[ 0 ] )
 		var files = fs.readdirSync( folderPath )
 
-		if ( files.length < 1 ) fs.rmdirSync( folderPath )
+		if ( files.length < 1 )
+		{
+			console.log( `Deleting folder: ${folderPath}` )
+
+			fs.rmdirSync( folderPath )
+
+			console.log( `Deleted folder: ${folderPath}` )
+		}
 	}
 
 	function copyFilePaths( filePaths )
 	{
-		clipboard.writeText( filePaths ) 
+		clipboard.writeText( filePaths.map( f => `"${path.join( lastArgs.folders[ 0 ], f )}"` ).join( " " ) ) 
 	}
 
 	function deleteFolder( folder )
 	{
-		fs.rmdirSync( folder )
+		var folderPath = path.join( lastArgs.folders[ 0 ], folder )
+
+		console.log( `Deleting folder: ${folderPath}` )
+
+//		fs.rmdirSync( folderPath )
+
+		console.log( `Deleted folder: ${folderPath}` )
 	}
 
-	function copyPath( path )
+	function copyPath( folderPath )
 	{
-		clipboard.writeText( path )
+		clipboard.writeText( path.join( lastArgs.folders[ 0 ], folderPath ) )
 	}
 
 	function openExternal( path )
