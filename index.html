@@ -186,6 +186,7 @@
       var vueApp = ui.initialize(
         {
           openFolder: success => success(ipcRenderer.sendSync("open")),
+          reopenFolder: success => success(ipcRenderer.sendSync("reopen")),
           getFiles: (path, success) => fs.readdir(vueApp.args.folders[0] + "/" + path, (err, dir) => success(dir)),
           getVideoPath: p => vueApp.args.folders[0] + "/" + p,
           openBrowser: () => ipcRenderer.send("browse"),

@@ -184,6 +184,7 @@
       var vueApp = ui.initialize(
         {
           openFolder: success => $.getJSON("open", success),
+          reopenFolder: success => $.getJSON("reopen", success),
           getFiles: (path, success) => $.getJSON("files/" + path, success),
           getVideoPath: p => "videos/" + p,
           openBrowser: () => $.post("browse"),

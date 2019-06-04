@@ -52,27 +52,30 @@
 	{
 		var fileInfos = []
 
-		for ( var file of files )
+		if ( files )
 		{
-			var match = matchClip( file )
-
-			if ( match && match.length > 0 )
+			for ( var file of files )
 			{
-				var date = extractDate( match )
-				var camera = match.groups[ "c" ]
-				var filePath = folder + "/" + file // path.join( folder, file )
+				var match = matchClip( file )
 
-				fileInfos.push(
-					{
-						date: date,
-						camera: camera,
-						file: filePath,
-						fileName: file
-					} )
+				if ( match && match.length > 0 )
+				{
+					var date = extractDate( match )
+					var camera = match.groups[ "c" ]
+					var filePath = folder + "/" + file // path.join( folder, file )
+
+					fileInfos.push(
+						{
+							date: date,
+							camera: camera,
+							file: filePath,
+							fileName: file
+						} )
+				}
 			}
-		}
 
-		fileInfos.sort( ( f1, f2 ) => f1.date.getTime() - f2.date.getTime() )
+			fileInfos.sort( ( f1, f2 ) => f1.date.getTime() - f2.date.getTime() )
+		}
 
 		return groupBy( fileInfos, f => f.date.toString() )
 	}
