@@ -149,20 +149,23 @@ function initialize()
 	{
 		var folders = dialog.showOpenDialog( { properties: [ "openDirectory" ] } )
 
-		settings.set( "folders", folders )
+		if ( folders ) settings.set( "folders", folders )
 
 		return openFolders( folders )
 	}
 
+	function reopen()
+	{
+		return lastArgs ? openFolders( lastArgs.folders ) : lastArgs
+	}
+
 	function openFolders( folders )
 	{
-		lastArgs = openFolder( folders )
-		lastArgs.version = app.getVersion()
-
-		var folders = lastArgs.folders
-
 		if ( folders && folders.length > 0 )
 		{
+			lastArgs = openFolder( folders )
+			lastArgs.version = app.getVersion()
+
 			console.log( `Serving content from ${folders[ 0 ]}` )
 
 			expressApp.use(
@@ -214,12 +217,9 @@ function initialize()
 	function deleteFolder( folder )
 	{
 		var folderPath = path.join( lastArgs.folders[ 0 ], folder )
+		var files = fs.readdirSync( folderPath )
 
-		console.log( `Deleting folder: ${folderPath}` )
-
-//		fs.rmdirSync( folderPath )
-
-		console.log( `Deleted folder: ${folderPath}` )
+		deleteFiles( files.map( f => path.join( folderPath, f ) ) )
 	}
 
 	function copyPath( folderPath )
@@ -253,6 +253,7 @@ function initialize()
 
 	expressApp.get( "/", ( request, response ) => response.sendFile( __dirname + "/external.html" ) )
 	expressApp.get( "/open", ( request, response ) => response.send( open() ) )
+	expressApp.get( "/reopen", ( request, response ) => response.send( reopen() ) )
 	expressApp.get( "/args", ( request, response ) => response.send( args() ) )
 
 	expressApp.post( "/browse", ( request, response ) => browse() )
@@ -276,6 +277,7 @@ function initialize()
 
 	ipcMain.on( "args", event => event.returnValue = args() )
 	ipcMain.on( "open", event => event.returnValue = open() )
+	ipcMain.on( "reopen", event => event.returnValue = reopen() )
 	ipcMain.on( "browse", event => browse() )
 	ipcMain.on( "deleteFiles", ( event, files ) => deleteFiles( files ) )
 	ipcMain.on( "copyFilePaths", ( event, filePaths ) => copyFilePaths( filePaths ) )

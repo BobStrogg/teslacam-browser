@@ -39,9 +39,17 @@
                 selectedTime: function( newTime, oldTime )
                 {
                     var index = this.times.indexOf( newTime )
-                    var time = this.times[ index ]
 
-                    this.selectedPath = time.time.relative
+                    if ( index >= 0 && index < this.times.length )
+                    {
+                        var time = this.times[ index ]
+
+                        this.selectedPath = time.time.relative
+                    }
+                    else
+                    {
+                        this.selectedPath = null
+                    }
                 },
                 selectedPath: function( newPath, oldPath )
                 {
@@ -65,11 +73,18 @@
                         }
                     }
 
-                    handlers.getFiles( newPath, files =>
-                        {
-                            this.timespans = Array.from( helpers.groupFiles( handlers.getVideoPath( newPath ), files ) )
-                                .map( ( [ key, value ] ) => makeTimespan( key, value ) )
-                        } )
+                    if ( newPath )
+                    {
+                        handlers.getFiles( newPath, files =>
+                            {
+                                this.timespans = Array.from( helpers.groupFiles( handlers.getVideoPath( newPath ), files ) )
+                                    .map( ( [ key, value ] ) => makeTimespan( key, value ) )
+                            } )
+                    }
+                    else
+                    {
+                        this.timespans = []
+                    }
                 },
                 "controls.timespan.ended": function( ended, oldEnded )
                 {
@@ -164,13 +179,17 @@
                         {
                             args.dateGroups = new Map( args.dateGroups )
 
-                            flatpickr(
+                            var fp = flatpickr(
                                 $( "#calendar" ),
                                 {
                                     onChange: d => this.selectedDate = d[ 0 ],
                                     enable: this.args.dates,
                                     inline: true
                                 } )
+
+                            this.selectedDate = ( fp.selectedDates && fp.selectedDates.length > 0 )
+                                ? fp.selectedDates[ 0 ]
+                                : new Date()
                         }
                     }
                 },
@@ -198,6 +217,7 @@
                     if ( confirm( `Are you sure you want to delete ${files.length} files from ${timespan.title}?` ) )
                     {
                         handlers.deleteFiles( files )
+                        handlers.reopenFolder( this.loaded )
                     }
                 },
                 copyFilePaths: function( timespan )
@@ -213,6 +233,7 @@
                     if ( confirm( `Are you sure you want to delete ${folder}?` ) )
                     {
                         handlers.deleteFolder( folder )
+                        handlers.reopenFolder( this.loaded )
                     }
                 },
                 copyPath: function( path )
