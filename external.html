@@ -77,11 +77,9 @@
                   <button id="openButton" type="button" class="btn btn-primary" @click="openFolder()">Open...</button>
                 </div>
                 <div class="px-2 mb-2 flex-grow-1 text-right" style="font-size: small;">
-                  <div>{{ args && args.folderInfos ? args.folderInfos.length : 0 }}
-                    event{{ args && args.folderInfos && args.folderInfos.length != 1 ? "s" : "" }}</div>
-                  <div>{{ args && args.dates ? args.dates.length : 0 }}
-                    day{{ args && args.dates && args.dates != 1 ? "s" : "" }}</div>
-                </div>
+                    <div>{{ args && args.folderInfos ? args.folderInfos.length : 0 }} event{{ args && args.folderInfos && args.folderInfos.length != 1 ? "s" : "" }}</div>
+                    <div>{{ args && args.dates ? args.dates.length : 0 }} day{{ args && args.dates && args.dates != 1 ? "s" : "" }}</div>
+                  </div>
               </div>
               <div class="px-2 mb-2">
                 <input id="calendar" class="flatpickr flatpickr-input dates form-control" type="text"
@@ -131,6 +129,7 @@
                   </div>
                 </div>
                 <div class="videoContainer card-body">
+                  <div class="alert alert-info" v-if="loading != null">Loading {{ Math.round( loading ) }}%...</div>
                   <video-group :controls="controls" :timespans="timespans"></video-group>
                   <div class="text-center">{{ timespanTime( controls.timespan ) }}</div>
                 </div>

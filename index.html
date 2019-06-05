@@ -130,6 +130,7 @@
                   </div>
                 </div>
                 <div class="videoContainer card-body">
+                  <div class="alert alert-info" v-if="loading != null">Loading {{ Math.round( loading ) }}%...</div>
                   <video-group :controls="controls" :timespans="timespans"></video-group>
                   <div class="text-center">{{ timespanTime( controls.timespan ) }}</div>
                 </div>
