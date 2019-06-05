@@ -83,7 +83,6 @@
 	function getTimes( dateGroups, date )
 	{
 		var times = []
-
 		var timeValues = dateGroups.get( date.toDateString() )
 
 		if ( timeValues )

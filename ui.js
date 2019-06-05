@@ -26,15 +26,14 @@
                     timespan: null,
                     speed: 1
                 },
-                playing: null
+                playing: null,
+                loading: null
             },
             watch:
             {
                 selectedDate: function( newDate, oldDate )
                 {
-                    this.times = helpers.getTimes( this.args.dateGroups, newDate )
-                    this.selectedTime = ( this.times.length > 0 ) ? this.times[ 0 ] : null
-                    this.selectedPath = ( this.selectedTime ) ? this.selectedTime.time.relative : null
+                    this.setDate( newDate )
                 },
                 selectedTime: function( newTime, oldTime )
                 {
@@ -69,6 +68,7 @@
                             currentTime: 0,
                             duration: null,
                             ended: false,
+                            loaded: false,
                             views: views
                         }
                     }
@@ -94,6 +94,7 @@
 
                         if ( index < this.timespans.length - 1 )
                         {
+                            var oldTimespan = this.controls.timespan
                             var timespan = this.timespans[ index + 1 ]
 
                             this.controls.timespan = timespan
@@ -101,6 +102,14 @@
                             timespan.currentTime = 0
                             timespan.ended = false
                             timespan.playing = true
+                            timespan.visible = true
+
+                            if ( oldTimespan )
+                            {
+                                oldTimespan.ended = false
+                                oldTimespan.currentTime = 0
+                                oldTimespan.visible = false
+                            }
                         }
                         else
                         {
@@ -123,6 +132,14 @@
             {
                 duration: function()
                 {
+                    if ( !this.timespans || this.timespans.length < 1 ) return 0
+
+                    var loading = this.timespans.filter( t => !t.loaded )
+
+                    this.loading = ( loading.length > 0 )
+                        ? Math.round( ( 1.0 - ( loading.length / this.timespans.length ) ) * 100 )
+                        : null
+
                     return this.timespans.reduce( ( t, ts ) => t + ts.duration, 0 )
                 },
                 currentTime:
@@ -169,6 +186,21 @@
                 {
                     handlers.openBrowser()
                 },
+                setDate: function( newDate )
+                {
+                    if ( newDate )
+                    {
+                        this.times = helpers.getTimes( this.args.dateGroups, newDate )
+                        this.selectedTime = ( this.times.length > 0 ) ? this.times[ 0 ] : null
+                        this.selectedPath = ( this.selectedTime ) ? this.selectedTime.time.relative : null
+                    }
+                    else
+                    {
+                        this.times = []
+                        this.selectedTime = null
+                        this.selectedPath = null
+                    }
+                },
                 loaded: function( args )
                 {
                     if ( args )
@@ -179,17 +211,17 @@
                         {
                             args.dateGroups = new Map( args.dateGroups )
 
-                            var fp = flatpickr(
+                            if ( !this.selectedDate ) this.selectedDate = new Date()
+                            else this.setDate( this.selectedDate )
+
+                            flatpickr(
                                 $( "#calendar" ),
                                 {
                                     onChange: d => this.selectedDate = d[ 0 ],
                                     enable: this.args.dates,
-                                    inline: true
+                                    inline: true,
+                                    defaultDate: this.selectedDate
                                 } )
-
-                            this.selectedDate = ( fp.selectedDates && fp.selectedDates.length > 0 )
-                                ? fp.selectedDates[ 0 ]
-                                : new Date()
                         }
                     }
                 },
@@ -319,10 +351,8 @@
                 },
                 durationChanged: function( timespan, camera, video )
                 {
-                    if ( camera == "front" )
-                    {
-                        this.duration = Math.max( this.duration, timespan.duration = video.duration )
-                    }
+                    timespan.duration = Math.max( timespan.duration, video.duration )
+                    this.duration = Math.max( this.duration, timespan.duration )
                 },
                 timeChanged: function( timespan, camera, video )
                 {
@@ -384,7 +414,7 @@
                 }
             },
             template:
-                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" preload="metadata" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" title="Open in file explorer" @click="openExternal"></video>`,
+                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" preload="metadata" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" title="Open in file explorer" @click="openExternal" @canplaythrough="loaded"></video>`,
             watch:
             {
                 "timespan.playing":
@@ -406,11 +436,14 @@
                                     var delay = -currentTime / this.playbackRate
 
                                     console.log( `Delaying ${this.view.file} for ${delay}` )
+
                                     this.timeout = window.setTimeout(
                                         () =>
                                         {
                                             this.timeout = null
+
                                             video.style.opacity = 1.0
+                                            video.currentTime = 0.0
                                             video.play().catch( e => this.error = e.message )
                                         },
                                         delay * 1000 )
@@ -418,8 +451,11 @@
                                 else
                                 {
                                     console.log( `Playing ${this.view.file}` )
+
                                     this.timeout = null
+
                                     video.style.opacity = 1.0
+                                    video.currentTime = currentTime
                                     video.play().catch( e => this.error = e.message )
                                 }
                             }
@@ -465,6 +501,10 @@
                     var video = event.target
 
                     this.timespan.duration = Math.max( this.timespan.duration, video.duration )
+                },
+                loaded: function( event )
+                {
+                    this.timespan.loaded = true
                 },
                 timeChanged: function( event )
                 {
