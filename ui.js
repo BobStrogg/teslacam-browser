@@ -414,7 +414,7 @@
                 }
             },
             template:
-                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" preload="metadata" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" title="Open in file explorer" @click="openExternal" @canplaythrough="loaded"></video>`,
+                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" preload="metadata" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" title="Open in file explorer" @click="openExternal" @canplaythrough="loaded" playsinline></video>`,
             watch:
             {
                 "timespan.playing":
