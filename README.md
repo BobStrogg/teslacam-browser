@@ -8,7 +8,7 @@ Basic video playback controls let you view all available cameras side-by-side.  
 
 ## Installation
 
-Installation packages are available on the (Releases)[https://github.com/BobStrogg/teslacam-browser/releases] page.
+Installation packages are available on the [Releases](https://github.com/BobStrogg/teslacam-browser/releases) page.
 
 ## HEVC codec
 
