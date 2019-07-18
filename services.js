@@ -184,9 +184,17 @@
 			}
 		}
 
-		var subfolders = fs.readdirSync( folder )
-			.map( f => { return { path: path.join( folder, f ), name: f } } )
-			.filter( f => isDirectory( f.path ) )
+		var subFolders = []
+
+		try
+		{
+			subfolders = fs.readdirSync( folder )
+				.map( f => { return { path: path.join( folder, f ), name: f } } )
+				.filter( f => isDirectory( f.path ) )
+		}
+		catch
+		{
+		}
 
 		return {
 			folder: folder,
