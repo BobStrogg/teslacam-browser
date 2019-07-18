@@ -117,6 +117,13 @@ function initialize()
 
 	services.initializeExpress( port )
 
+	function open()
+	{
+		var folders = dialog.showOpenDialog( { properties: [ "openDirectory" ] } )
+
+		return services.openFolders( folders )
+	}
+
 	function browse()
 	{
 		console.log( `Opening browser at http://localhost:${port}` )
@@ -124,8 +131,8 @@ function initialize()
 	}
 
 	ipcMain.on( "args", event => event.returnValue = services.args() )
-	ipcMain.on( "openFolders", event => event.returnValue = services.open() )
-	ipcMain.on( "reopenFolders", event => event.returnValue = services.reopen() )
+	ipcMain.on( "openFolders", event => event.returnValue = open() )
+	ipcMain.on( "reopenFolders", event => event.returnValue = services.reopenFolders() )
 	ipcMain.on( "openFolder", ( event, folder ) => event.returnValue = setFolder( services.openFolder( folder ) ) )
 	ipcMain.on( "openBrowser", event => browse() )
 	ipcMain.on( "deleteFiles", ( event, files ) => services.deleteFiles( files ) )
