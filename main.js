@@ -1,13 +1,11 @@
 // Modules to control application life and create native browser window
 const { app, BrowserWindow, dialog, ipcMain, shell, clipboard } = require( "electron" )
 const menu = require( "./menu" )
-const helpers = require( "./helpers" )
+const services = require( "./services" )
 const { autoUpdater } = require( "electron-updater" )
 const settings = require( "electron-settings" )
 const fs = require( "fs" )
-const path = require( "path" )
 const express = require( "express" )
-const serveIndex = require( "serve-index" )
 
 autoUpdater.checkForUpdatesAndNotify()
 
@@ -70,80 +68,43 @@ app.on( "activate", function ()
 
 function initialize()
 {
-	function openFolder( folders )
-	{
-		var specialFolders = [ "TeslaCam", "SavedClips", "RecentClips" ]
-		var folderInfos = []
-
-		function addSubfolders( baseFolder )
-		{
-			var subfolders = fs.readdirSync( baseFolder )
-
-			for ( var folder of subfolders )
-			{
-				if ( specialFolders.includes( folder ) )
-				{
-					addSubfolders( path.join( baseFolder, folder ) )
-				}
-				else
-				{
-					var match = helpers.matchFolder( folder )
-				
-					if ( match && match.length > 0 )
-					{
-						function addFolder( match )
-						{
-							var date = helpers.extractDate( match )
-							var folderPath = path.join( baseFolder, folder )
-							var relative = path.relative( folders[ 0 ], folderPath )
-					
-							folderInfos.push( { date: date, path: folderPath, relative: relative, recent: false } )
-						}
-
-						addFolder( match )
-					}
-					else
-					{
-						var clipMatch = helpers.matchClip( folder )
-
-						if ( clipMatch && clipMatch.length > 0 )
-						{
-							var date = helpers.extractDate( clipMatch )
-							var existing = folderInfos.find( i => i.path == baseFolder )
-
-							if ( existing )
-							{
-								if ( date > existing.date ) existing.date = date
-							}
-							else
-							{
-								var relative = path.relative( folders[ 0 ], baseFolder )
-
-								folderInfos.push( { date: date, path: baseFolder, relative: relative, recent: true } )
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if ( folders && folders.length > 0 ) addSubfolders( folders[ 0 ] )
-
-		var dateGroups = helpers.groupBy( folderInfos, g => g.date.toDateString() )
-		var dates = Array.from( dateGroups.keys() ).map( d => new Date( d ) )
-
-		return {
-			folders: folders,
-			folderInfos: folderInfos,
-			dateGroups: Array.from( dateGroups ),
-			dates: dates
-		}
-	}
-
-	const expressApp = express()
 	const port = 8088
 
-	var lastArgs = null
+	services.setVersion( app.getVersion() )
+
+	var lastFolder = settings.get( "folders" )
+
+	if ( lastFolder ) lastFolder = lastFolder[ 0 ]
+	else lastFolder = settings.get( "folder" )
+
+	//If we have last folders, we need to make sure that the folder still exists before trying to open it
+	if ( lastFolder )
+	{
+		fs.stat( `${lastFolder}`, function(err)
+		{
+			if ( !err )
+			{
+				console.log( `Opening Last Folder (${lastFolder})` );
+				services.setFolder( lastFolder )
+			}
+			else if ( err.code === 'ENOENT' )
+			{
+				console.log( `Last folder (${lastFolder}) doesn't exist anymore` );
+				services.setFolder( "" )
+			}
+		});
+	} 
+	else
+	{
+		services.setFolder( "" )
+	}
+
+	function setFolder( folder )
+	{
+		settings.set( "folder", folder )
+
+		return folder
+	}
 
 	function open()
 	{
@@ -154,33 +115,7 @@ function initialize()
 		return openFolders( folders )
 	}
 
-	function reopen()
-	{
-		return lastArgs ? openFolders( lastArgs.folders ) : lastArgs
-	}
-
-	function openFolders( folders )
-	{
-		if ( folders && folders.length > 0 )
-		{
-			lastArgs = openFolder( folders )
-			lastArgs.version = app.getVersion()
-
-			console.log( `Serving content from ${folders[ 0 ]}` )
-
-			expressApp.use(
-				"/videos",
-				express.static( folders[ 0 ] ),
-				serveIndex( folders[ 0 ], { 'icons': true } ) )
-		}
-
-		return lastArgs
-	}
-
-	function args()
-	{
-		return lastArgs = lastArgs || { version: app.getVersion() }
-	}
+	services.initializeExpress( port )
 
 	function browse()
 	{
@@ -188,110 +123,14 @@ function initialize()
 		shell.openExternal( `http://localhost:${port}` )
 	}
 
-	function deleteFiles( files )
-	{
-		console.log( `Deleting files: ${files}` )
-
-		for ( var file of files ) fs.unlinkSync( file )
-
-		console.log( `Deleted files: ${files}` )
-
-		var folderPath = path.dirname( files[ 0 ] )
-		var files = fs.readdirSync( folderPath )
-
-		if ( files.length < 1 )
-		{
-			console.log( `Deleting folder: ${folderPath}` )
-
-			fs.rmdirSync( folderPath )
-
-			console.log( `Deleted folder: ${folderPath}` )
-		}
-	}
-
-	function copyFilePaths( filePaths )
-	{
-		clipboard.writeText( filePaths.map( f => `"${path.join( lastArgs.folders[ 0 ], f )}"` ).join( " " ) ) 
-	}
-
-	function deleteFolder( folder )
-	{
-		var folderPath = path.join( lastArgs.folders[ 0 ], folder )
-		var files = fs.readdirSync( folderPath )
-
-		deleteFiles( files.map( f => path.join( folderPath, f ) ) )
-	}
-
-	function copyPath( folderPath )
-	{
-		clipboard.writeText( path.join( lastArgs.folders[ 0 ], folderPath ) )
-	}
-
-	function openExternal( path )
-	{
-		shell.showItemInFolder( path )
-	}
-
-	var lastFolders = settings.get( "folders" )
-
-	//If we have last folders, we need to make sure that the folder still exists before trying to open it
-	if ( lastFolders )
-	{
-		fs.stat( `${lastFolders}`, function(err)
-		{
-			if ( !err )
-			{
-				console.log('Opening Last Folders');
-				openFolders( lastFolders )
-			}
-			else if ( err.code === 'ENOENT' )
-			{
-				console.log( `Last folders: '${lastFolders}' doesn't exist anymore` );
-			}
-		});
-	} 
-
-	expressApp.get( "/", ( request, response ) => response.sendFile( __dirname + "/external.html" ) )
-	expressApp.get( "/open", ( request, response ) => response.send( open() ) )
-	expressApp.get( "/reopen", ( request, response ) => response.send( reopen() ) )
-	expressApp.get( "/args", ( request, response ) => response.send( args() ) )
-
-	expressApp.post( "/browse", ( request, response ) => browse() )
-	expressApp.post( "/deleteFiles", ( request, response, files ) => deleteFiles( files ) )
-	expressApp.post( "/copyFilePaths", ( request, response, filePaths ) => copyFilePaths( filePaths ) )
-	expressApp.post( "/deleteFolder", ( request, response, folder ) => deleteFolder( folder ) )
-	expressApp.post( "/copyPath", ( request, response, path ) => copyPath( path ) )
-	expressApp.post( "/openExternal", ( request, response, path ) => openExternal( path ) )
-
-	expressApp.use( "/files", ( request, response ) =>
-	{
-		var folder = lastArgs.folders[ 0 ] + "/" + request.path
-
-		console.log( `Serving file listing from ${folder}` )
-
-		response.send( fs.readdirSync( folder ) )
-	} )
-
-	expressApp.use( "/content", express.static( __dirname ) )
-	expressApp.use( "/node_modules", express.static( __dirname + "/node_modules" ) )
-
-	ipcMain.on( "args", event => event.returnValue = args() )
-	ipcMain.on( "open", event => event.returnValue = open() )
-	ipcMain.on( "reopen", event => event.returnValue = reopen() )
-	ipcMain.on( "browse", event => browse() )
-	ipcMain.on( "deleteFiles", ( event, files ) => deleteFiles( files ) )
-	ipcMain.on( "copyFilePaths", ( event, filePaths ) => copyFilePaths( filePaths ) )
-	ipcMain.on( "deleteFolder", ( event, folder ) => deleteFolder( folder ) )
-	ipcMain.on( "copyPath", ( event, path ) => copyPath( path ) )
-	ipcMain.on( "openExternal", ( event, path ) => openExternal( path ) )
-
-	expressApp.listen( port, ( err ) =>
-	{
-		if (err)
-		{
-			return console.log( `something bad happened`, err)
-		}
-
-		console.log( `Server is listening on ${port}` )
-	} )
+	ipcMain.on( "args", event => event.returnValue = services.args() )
+	ipcMain.on( "openFolders", event => event.returnValue = services.open() )
+	ipcMain.on( "reopenFolders", event => event.returnValue = services.reopen() )
+	ipcMain.on( "openFolder", ( event, folder ) => event.returnValue = setFolder( services.openFolder( folder ) ) )
+	ipcMain.on( "openBrowser", event => browse() )
+	ipcMain.on( "deleteFiles", ( event, files ) => services.deleteFiles( files ) )
+	ipcMain.on( "copyFilePaths", ( event, filePaths ) => clipboard.writeText( services.copyFilePaths( filePaths ) ) )
+	ipcMain.on( "deleteFolder", ( event, folder ) => services.deleteFolder( folder ) )
+	ipcMain.on( "copyPath", ( event, path ) => clipboard.writeText( services.copyPath( path ) ) )
+	ipcMain.on( "openExternal", ( event, path ) => shell.showItemInFolder( path ) )
 }

@@ -48,7 +48,7 @@
 		return map;
 	}
 
-	function groupFiles( folder, files )
+	function groupFiles( folder, files, getVideoPath )
 	{
 		var fileInfos = []
 
@@ -68,7 +68,8 @@
 						{
 							date: date,
 							camera: camera,
-							file: filePath,
+							file: getVideoPath( filePath ),
+							filePath: filePath,
 							fileName: file
 						} )
 				}

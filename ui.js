@@ -7,15 +7,20 @@
 {
     function createVueApp( handlers )
     {
+        var args = { version: null };
+
         return new Vue(
         {
             el: '#root',
             data:
             {
-                args: { version: null },
+                args: args,
                 showSidebar: true,
+                showFolders: false,
                 combineClips: true,
-                selectedDate: null,
+                parsedPath: null,
+                selectedFolder: null,
+                selectedDate: new Date(),
                 times: [],
                 selectedTime: null,
                 selectedPath: null,
@@ -31,6 +36,13 @@
             },
             watch:
             {
+                selectedFolder: function( folder, oldFolder )
+                {
+                    if ( folder )
+                    {
+                        handlers.openFolder( folder, f => this.args = f )
+                    }
+                },
                 selectedDate: function( newDate, oldDate )
                 {
                     this.setDate( newDate )
@@ -77,7 +89,7 @@
                     {
                         handlers.getFiles( newPath, files =>
                             {
-                                this.timespans = Array.from( helpers.groupFiles( handlers.getVideoPath( newPath ), files ) )
+                                this.timespans = Array.from( helpers.groupFiles( newPath, files, handlers.getVideoPath ) )
                                     .map( ( [ key, value ] ) => makeTimespan( key, value ) )
                             } )
                     }
@@ -85,6 +97,17 @@
                     {
                         this.timespans = []
                     }
+                },
+                "args.dates": function( dates, oldDates )
+                {
+                    flatpickr(
+                        $( "#calendar" ),
+                        {
+                            onChange: d => this.selectedDate = d[ 0 ],
+                            enable: dates,
+                            inline: true,
+                            defaultDate: this.selectedDate
+                        } )
                 },
                 "controls.timespan.ended": function( ended, oldEnded )
                 {
@@ -180,7 +203,8 @@
             {
                 openFolder: function()
                 {
-                    handlers.openFolder( this.loaded )
+                    // TODO: Still used?
+                    handlers.openFolder( null, this.loaded )
                 },
                 openBrowser: function()
                 {
@@ -190,7 +214,7 @@
                 {
                     if ( newDate )
                     {
-                        this.times = helpers.getTimes( this.args.dateGroups, newDate )
+                        this.times = helpers.getTimes( new Map( this.args.dateGroups ), newDate )
                         this.selectedTime = ( this.times.length > 0 ) ? this.times[ 0 ] : null
                         this.selectedPath = ( this.selectedTime ) ? this.selectedTime.time.relative : null
                     }
@@ -203,27 +227,7 @@
                 },
                 loaded: function( args )
                 {
-                    if ( args )
-                    {
-                        this.args = args
-
-                        if ( args.dateGroups )
-                        {
-                            args.dateGroups = new Map( args.dateGroups )
-
-                            if ( !this.selectedDate ) this.selectedDate = new Date()
-                            else this.setDate( this.selectedDate )
-
-                            flatpickr(
-                                $( "#calendar" ),
-                                {
-                                    onChange: d => this.selectedDate = d[ 0 ],
-                                    enable: this.args.dates,
-                                    inline: true,
-                                    defaultDate: this.selectedDate
-                                } )
-                        }
-                    }
+                    this.args = args
                 },
                 playPause: function( timespan )
                 {
@@ -244,7 +248,7 @@
                 },
                 deleteFiles: function( timespan )
                 {
-                    var files = timespan.views.map( v => v.file )
+                    var files = timespan.views.map( v => v.filePath )
 
                     if ( confirm( `Are you sure you want to delete ${files.length} files from ${timespan.title}?` ) )
                     {
@@ -254,7 +258,7 @@
                 },
                 copyFilePaths: function( timespan )
                 {
-                    var files = timespan.views.map( v => v.file )
+                    var files = timespan.views.map( v => v.filePath )
 
                     handlers.copyFilePaths( files )
 
@@ -414,7 +418,7 @@
                 }
             },
             template:
-                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" preload="metadata" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" title="Open in file explorer" @click="openExternal" @canplaythrough="loaded" playsinline></video>`,
+                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" title="Open in file explorer" @click="openExternal" @canplaythrough="loaded" playsinline></video>`,
             watch:
             {
                 "timespan.playing":
@@ -435,7 +439,7 @@
                                 {
                                     var delay = -currentTime / this.playbackRate
 
-                                    console.log( `Delaying ${this.view.file} for ${delay}` )
+                                    console.log( `Delaying ${this.view.filePath} for ${delay}` )
 
                                     this.timeout = window.setTimeout(
                                         () =>
@@ -450,7 +454,7 @@
                                 }
                                 else
                                 {
-                                    console.log( `Playing ${this.view.file}` )
+                                    console.log( `Playing ${this.view.filePath}` )
 
                                     this.timeout = null
 
@@ -534,7 +538,11 @@
         var videosComponent = createVideosComponent( handlers )
         var videoComponent = createVideoComponent( handlers )
 
-        return createVueApp( handlers )
+        var vueApp = createVueApp( handlers )
+
+        handlers.openFolder( null, f => vueApp.args = f )
+
+        return vueApp
     }
 
     return {

@@ -13,6 +13,7 @@
   <script type="text/javascript" src="node_modules/flatpickr/dist/flatpickr.min.js"></script>
   <script>const $ = require("jquery");</script>
   <script>const bootstrap = require("bootstrap");</script>
+  <script>const path = require("path");</script>
   <script>const helpers = require("./helpers");</script>
   <script>const ui = require("./ui");</script>
 
@@ -72,15 +73,35 @@
 
             <div class="navigation overflow-auto">
 
-              <div class="d-flex align-items-center">
-                <div class="px-2 mb-2 text-nowrap">
-                  <button id="openButton" type="button" class="btn btn-primary" @click="openFolder()">Open...</button>
-                  <button id="browseButton" type="button" class="btn btn-secondary" @click="openBrowser()">Browse</button>
-                </div>
-                <div class="px-2 mb-2 flex-grow-1 text-right" style="font-size: small;">
-                    <div>{{ args && args.folderInfos ? args.folderInfos.length : 0 }} event{{ args && args.folderInfos && args.folderInfos.length != 1 ? "s" : "" }}</div>
-                    <div>{{ args && args.dates ? args.dates.length : 0 }} day{{ args && args.dates && args.dates != 1 ? "s" : "" }}</div>
+              <div class="px-2 mb-2 overflow-auto">
+                <button class="btn btn-primary btn-block dropdown-toggle" type="button" @click.prevent="showFolders = !showFolders" style="word-wrap: break-word; white-space: normal; max-width: 320px;">
+                  <span class="oi oi-folder text-warning"></span>
+                  <span>{{args.folder}}</span>
+                </button>
+                <div v-show="showFolders">
+                  <div v-for="f, i in args.folderPathParts" :style="{ marginLeft: ( i * 10 ) + 'px' }">
+                    <a href="" @click.prevent="selectedFolder = f.path">
+                      <span class="oi oi-folder text-warning"></span>
+                      <span :style="{ fontWeight: i < args.folderPathParts.length - 1 ? 'normal' : 'bold' }">{{f.name}}</span>
+                    </a>
                   </div>
+                  <div v-for="subfolder in args.subfolders" :style="{ marginLeft: ( args.folderPathParts.length * 10 ) + 'px' }">
+                    <a href="" @click.prevent="selectedFolder = subfolder.path">
+                      <span class="oi oi-folder text-warning"></span>
+                      <span>{{subfolder.name}}</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex align-items-center">
+                <div class="px-2 mb-2 flex-grow-1" style="font-size: small;">
+                  <div>{{ args && args.folderInfos ? args.folderInfos.length : 0 }} event{{ args && args.folderInfos && args.folderInfos.length != 1 ? "s" : "" }}</div>
+                  <div>{{ args && args.dates ? args.dates.length : 0 }} day{{ args && args.dates && args.dates != 1 ? "s" : "" }}</div>
+                </div>
+                <div class="px-2 mb-2 text-nowrap">
+                  <!--button id="openButton" type="button" class="btn btn-primary" @click="openFolder()">Open...</button-->
+                  <button id="browseButton" type="button" class="btn btn-secondary" @click="openBrowser()">Open in browser</button>
+                </div>
               </div>
               <div class="px-2 mb-2">
                 <input id="calendar" class="flatpickr flatpickr-input dates form-control" type="text"
@@ -130,7 +151,7 @@
                   </div>
                 </div>
                 <div class="videoContainer card-body">
-                  <div class="alert alert-info" v-if="loading != null">Loading {{ Math.round( loading ) }}%...</div>
+                  <div class="alert alert-info" v-if="loading != null">Loading {{ Math.round( loading ) }}%...<span v-if="selectedTime.time.recent"> (Clips from RecentFiles will take longer to load)</span></div>
                   <video-group :controls="controls" :timespans="timespans"></video-group>
                   <div class="text-center">{{ timespanTime( controls.timespan ) }}</div>
                 </div>
@@ -144,7 +165,7 @@
                       {{timespan.title}}</div>
                     <div class="px-2 controls">
                       <button class="btn btn-danger delete" @click="deleteFiles( timespan )">Delete</button>
-                      <button class="btn btn-info copy" @click="copyFilePaths( timespan )">Copy path</button>
+                      <button class="btn btn-info copy" @click="copyFilePaths( timespan )">Copy paths</button>
                       <button class="btn btn-success play" v-show="!timespan.playing"
                         @click="playPause( timespan )"><span class="oi oi-media-play" title="Play"></span></button>
                       <button class="btn btn-warning pause" v-show="timespan.playing"
@@ -186,19 +207,18 @@
 
       var vueApp = ui.initialize(
         {
-          openFolder: success => success(ipcRenderer.sendSync("open")),
-          reopenFolder: success => success(ipcRenderer.sendSync("reopen")),
-          getFiles: (path, success) => fs.readdir(vueApp.args.folders[0] + "/" + path, (err, dir) => success(dir)),
-          getVideoPath: p => vueApp.args.folders[0] + "/" + p,
-          openBrowser: () => ipcRenderer.send("browse"),
+          openFolders: success => success(ipcRenderer.sendSync("openFolders")),
+          reopenFolders: success => success(ipcRenderer.sendSync("reopenFolders")),
+          openFolder: (p, success) => success(ipcRenderer.sendSync("openFolder", p)),
+          getFiles: (p, success) => fs.readdir(path.join(vueApp.args.folder, p), (err, dir) => success(dir)),
+          getVideoPath: p => path.join( vueApp.args.folder, p ),
+          openBrowser: () => ipcRenderer.send("openBrowser"),
           deleteFiles: files => ipcRenderer.send("deleteFiles", files),
-          copyFilePaths: filePaths => ipcRenderer.send("copyFilePaths", filePaths),
           deleteFolder: folder => ipcRenderer.send("deleteFolder", folder),
+          copyFilePaths: filePaths => ipcRenderer.send("copyFilePaths", filePaths),
           copyPath: path => ipcRenderer.send("copyPath", path),
           openExternal: path => ipcRenderer.send("openExternal", path)
         })
-
-      vueApp.loaded(ipcRenderer.sendSync("args"))
     })();
 
   </script>
