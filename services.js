@@ -173,9 +173,21 @@
 		//console.log( folderNames )
 		//console.log( folderPathParts )
 
+		function isDirectory( p )
+		{
+			try
+			{
+				return fs.lstatSync( p ).isDirectory()
+			}
+			catch
+			{
+				return false
+			}
+		}
+
 		var subfolders = fs.readdirSync( folder )
 			.map( f => { return { path: path.join( folder, f ), name: f } } )
-			.filter( f => fs.lstatSync( f.path ).isDirectory() )
+			.filter( f => isDirectory( f.path ) )
 
 		return {
 			folder: folder,
