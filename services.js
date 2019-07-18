@@ -20,13 +20,6 @@
 		lastArgs.folder = f
 	}
 
-	function open()
-	{
-		var folders = dialog.showOpenDialog( { properties: [ "openDirectory" ] } )
-
-		return openFolders( folders )
-	}
-
 	function reopenFolders()
 	{
 		return lastArgs ? openFolders( lastArgs.folders ) : lastArgs
@@ -104,53 +97,59 @@
 
 		function addSubfolders( baseFolder )
 		{
-			var subfolders = fs.readdirSync( baseFolder )
-
-			for ( var subfolder of subfolders )
+			try
 			{
-				if ( specialFolders.includes( subfolder ) )
-				{
-					addSubfolders( path.join( baseFolder, subfolder ) )
-				}
-				else
-				{
-					var match = helpers.matchFolder( subfolder )
-				
-					if ( match && match.length > 0 )
-					{
-						function addFolder( match )
-						{
-							var date = helpers.extractDate( match )
-							var folderPath = path.join( baseFolder, subfolder )
-							var relative = path.relative( folder, folderPath )
-					
-							folderInfos.push( { date: date, path: folderPath, relative: relative, recent: false } )
-						}
+				var subfolders = fs.readdirSync( baseFolder )
 
-						addFolder( match )
+				for ( var subfolder of subfolders )
+				{
+					if ( specialFolders.includes( subfolder ) )
+					{
+						addSubfolders( path.join( baseFolder, subfolder ) )
 					}
 					else
 					{
-						var clipMatch = helpers.matchClip( subfolder )
-
-						if ( clipMatch && clipMatch.length > 0 )
+						var match = helpers.matchFolder( subfolder )
+					
+						if ( match && match.length > 0 )
 						{
-							var date = helpers.extractDate( clipMatch )
-							var existing = folderInfos.find( i => i.path == baseFolder )
-
-							if ( existing )
+							function addFolder( match )
 							{
-								if ( date > existing.date ) existing.date = date
+								var date = helpers.extractDate( match )
+								var folderPath = path.join( baseFolder, subfolder )
+								var relative = path.relative( folder, folderPath )
+						
+								folderInfos.push( { date: date, path: folderPath, relative: relative, recent: false } )
 							}
-							else
-							{
-								var relative = path.relative( folder, baseFolder )
 
-								folderInfos.push( { date: date, path: baseFolder, relative: relative, recent: true } )
+							addFolder( match )
+						}
+						else
+						{
+							var clipMatch = helpers.matchClip( subfolder )
+
+							if ( clipMatch && clipMatch.length > 0 )
+							{
+								var date = helpers.extractDate( clipMatch )
+								var existing = folderInfos.find( i => i.path == baseFolder )
+
+								if ( existing )
+								{
+									if ( date > existing.date ) existing.date = date
+								}
+								else
+								{
+									var relative = path.relative( folder, baseFolder )
+
+									folderInfos.push( { date: date, path: baseFolder, relative: relative, recent: true } )
+								}
 							}
 						}
 					}
 				}
+			}
+			catch
+			{
 			}
 		}
 
@@ -253,7 +252,6 @@
 	return {
 		setVersion: setVersion,
 		setFolder: setFolder,
-        open: open,
         openFolders: openFolders,
         reopenFolders: reopenFolders,
         openFolder: openFolder,

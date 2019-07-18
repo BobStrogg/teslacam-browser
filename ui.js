@@ -201,10 +201,10 @@
             },
             methods:
             {
-                openFolder: function()
+                openFolders: function()
                 {
                     // TODO: Still used?
-                    handlers.openFolder( null, this.loaded )
+                    handlers.openFolders( this.loaded )
                 },
                 openBrowser: function()
                 {

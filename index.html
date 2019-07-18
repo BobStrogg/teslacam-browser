@@ -99,8 +99,8 @@
                   <div>{{ args && args.dates ? args.dates.length : 0 }} day{{ args && args.dates && args.dates != 1 ? "s" : "" }}</div>
                 </div>
                 <div class="px-2 mb-2 text-nowrap">
-                  <!--button id="openButton" type="button" class="btn btn-primary" @click="openFolder()">Open...</button-->
-                  <button id="browseButton" type="button" class="btn btn-secondary" @click="openBrowser()">Open in browser</button>
+                  <button id="openButton" type="button" class="btn btn-primary" @click="openFolders()">Open...</button>
+                  <button id="browseButton" type="button" class="btn btn-secondary" @click="openBrowser()">Browse</button>
                 </div>
               </div>
               <div class="px-2 mb-2">
