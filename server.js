@@ -5,7 +5,7 @@ const express = require( "express" )
 
 const port = 8088
 
-services.setVersion( app.getVersion() )
+services.setVersion( process.env.npm_package_version )
 
 services.setFolder( "" )
 services.initializeExpress( port )
