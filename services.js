@@ -162,8 +162,9 @@
 		var parsedFolder = path.parse( folder )
 
 		var folderNames = [ parsedFolder.root ]
-			.concat( path.join( parsedFolder.dir, parsedFolder.base ).split( path.sep )
-				.filter( f => f.length > 0 ) )
+			.concat( parsedFolder.dir.replace( parsedFolder.root, "" ).split( path.sep ) )
+			.concat( [ parsedFolder.base ] )
+			.filter( f => f.length > 0 )
 
 		var folderPathParts = folderNames
 			.map( ( f, i ) => { return { path: path.join( ...folderNames.slice( 0, i + 1 ) ), name: f } } )
