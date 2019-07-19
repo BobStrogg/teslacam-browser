@@ -6,7 +6,7 @@ const express = require( "express" )
 const port = 8088
 const defaultFolder = ( process.argv.length > 2 ) ? process.argv[ 2 ] : ""
 
-services.setVersion( process.env.npm_package_version )
+services.setVersion( require('./package.json').version )
 
 services.setFolder( defaultFolder )
 services.initializeExpress( port )
