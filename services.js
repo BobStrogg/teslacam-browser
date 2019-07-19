@@ -12,12 +12,14 @@
     function setVersion( v )
     {
 		version = v
-        lastArgs.version = v
+		lastArgs.version = v
+		console.log( "TeslaCam Browser version set to " + v )
     }
 
 	function setFolder( f )
 	{
 		lastArgs.folder = f
+		console.log( "Root folder set to " + f )
 	}
 
 	function reopenFolders()
@@ -251,10 +253,10 @@
         {
             if (err)
             {
-                return console.log( `something bad happened`, err)
+                return console.log( `Something bad happened`, err )
             }
     
-            console.log( `Server is listening on ${port}` )
+            console.log( `Server is listening on port ${port}` )
         } )
     }
 
