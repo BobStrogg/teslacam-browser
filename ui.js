@@ -1,11 +1,11 @@
 ( function ( root, factory )
 {
-	if ( typeof define === 'function' && define.amd ) define( [ "./helpers" ], factory );
-	else if ( typeof exports === 'object' ) module.exports = factory( require( "./helpers" ) );
-	else root.ui = factory( root.helpers );
-}( typeof self !== 'undefined' ? self : this, function ( helpers )
+	if ( typeof define === 'function' && define.amd ) define( [], factory );
+	else if ( typeof exports === 'object' ) module.exports = factory();
+	else root.ui = factory();
+}( typeof self !== 'undefined' ? self : this, function ()
 {
-    function createVueApp( handlers )
+    function createVueApp( handlers, helpers )
     {
         var args = { version: null };
 
@@ -532,13 +532,13 @@
         } )
     }
 
-    function initialize( handlers )
+    function initialize( handlers, helpers )
     {
         var videoGroupComponent = createVideoGroupComponent( handlers )
         var videosComponent = createVideosComponent( handlers )
         var videoComponent = createVideoComponent( handlers )
 
-        var vueApp = createVueApp( handlers )
+        var vueApp = createVueApp( handlers, helpers )
 
         handlers.openFolder( null, f => vueApp.args = f )
 
