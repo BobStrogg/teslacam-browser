@@ -215,6 +215,8 @@
     {
 		function serveVideos( args )
 		{
+			lastArgs = args
+
 			console.log( `Serving content from ${args.folder}` )
 
 			expressApp.use(
@@ -239,7 +241,7 @@
     
         expressApp.use( "/files", ( request, response ) =>
         {
-            var folder = lastArgs.folder + "/" + request.path
+            var folder = path.join( lastArgs.folder, request.path )
     
             console.log( `Serving file listing from ${folder}` )
     
