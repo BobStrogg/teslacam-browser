@@ -242,7 +242,8 @@
           copyFilePaths: filePaths => copyToClipboard( joinFilePaths( filePaths ) ),
           copyPath: path => copyToClipboard( joinFolderPath( path ) ),
           openExternal: path => window.open(path)
-        })
+        },
+        helpers )
     })();
   </script>
 
