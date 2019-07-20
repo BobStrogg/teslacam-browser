@@ -35,7 +35,7 @@
 
             Object.assign( lastArgs, openFolder( folder ) )
 
-			console.log( `Serving content from ${folder}` )
+			console.log( `OBSOLETE?: Serving content from ${folder}` )
 
 			expressApp.use(
 				"/videos",
@@ -49,6 +49,14 @@
 	function args()
 	{
 		return lastArgs
+	}
+
+	function getFiles( p, getVideoPath )
+	{
+		var folder = path.join( lastArgs.folder, p )
+		var files = fs.readdirSync( folder )
+
+		return Array.from( helpers.groupFiles( p, files, getVideoPath ) )
 	}
 
 	function deleteFiles( files )
@@ -217,7 +225,7 @@
 		{
 			lastArgs = args
 
-			console.log( `Serving content from ${args.folder}` )
+			console.log( ` ${args.folder}` )
 
 			expressApp.use(
 				"/videos",
@@ -235,18 +243,10 @@
         expressApp.use( "/openFolder", ( request, response ) => response.send( serveVideos( openFolder( decodeURIComponent( request.path ) ) ) ) )
         expressApp.use( "/copyFilePaths", ( request, response ) => response.send( copyFilePaths( decodeURIComponent( request.path ) ) ) )
         expressApp.use( "/copyPath", ( request, response ) => response.send( copyPath( decodeURIComponent( request.path ) ) ) )
+        expressApp.use( "/files", ( request, response ) => response.send( getFiles( decodeURIComponent( request.path ), p => "videos/" + p ) ) )
 
         expressApp.post( "/deleteFiles", ( request, response ) => deleteFiles( request.body ) )
         expressApp.post( "/deleteFolder", ( request, response ) => deleteFolder( request.body ) )
-    
-        expressApp.use( "/files", ( request, response ) =>
-        {
-            var folder = path.join( lastArgs.folder, request.path )
-    
-            console.log( `Serving file listing from ${folder}` )
-    
-            response.send( fs.readdirSync( folder ) )
-        } )
 
         expressApp.use( "/content", express.static( __dirname ) )
         expressApp.use( "/node_modules", express.static( __dirname + "/node_modules" ) )
@@ -268,7 +268,8 @@
         openFolders: openFolders,
         reopenFolders: reopenFolders,
         openFolder: openFolder,
-        args: args,
+		args: args,
+		getFiles: getFiles,
         deleteFiles: deleteFiles,
         copyFilePaths: copyFilePaths,
         deleteFolder: deleteFolder,

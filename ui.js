@@ -5,7 +5,7 @@
 	else root.ui = factory();
 }( typeof self !== 'undefined' ? self : this, function ()
 {
-    function createVueApp( handlers, helpers )
+    function createVueApp( handlers )
     {
         var args = { version: null };
 
@@ -89,7 +89,7 @@
                     {
                         handlers.getFiles( newPath, files =>
                             {
-                                this.timespans = Array.from( helpers.groupFiles( newPath, files, handlers.getVideoPath ) )
+                                this.timespans = files
                                     .map( ( [ key, value ] ) => makeTimespan( key, value ) )
                             } )
                     }
@@ -214,7 +214,27 @@
                 {
                     if ( newDate )
                     {
-                        this.times = helpers.getTimes( new Map( this.args.dateGroups ), newDate )
+                        function getTimes( dateGroups, date )
+                        {
+                            var times = []
+                            var timeValues = dateGroups.get( date.toDateString() )
+                    
+                            if ( timeValues )
+                            {
+                                for ( var time of timeValues )
+                                {
+                                    var name = new Date( time.date ).toLocaleTimeString()
+                    
+                                    if ( time.recent ) name += " (Recent)"
+                    
+                                    times.push( { time: time, name: name } )
+                                }
+                            }
+                    
+                            return times
+                        }
+                    
+                        this.times = getTimes( new Map( this.args.dateGroups ), newDate )
                         this.selectedTime = ( this.times.length > 0 ) ? this.times[ 0 ] : null
                         this.selectedPath = ( this.selectedTime ) ? this.selectedTime.time.relative : null
                     }
@@ -532,13 +552,13 @@
         } )
     }
 
-    function initialize( handlers, helpers )
+    function initialize( handlers )
     {
         var videoGroupComponent = createVideoGroupComponent( handlers )
         var videosComponent = createVideosComponent( handlers )
         var videoComponent = createVideoComponent( handlers )
 
-        var vueApp = createVueApp( handlers, helpers )
+        var vueApp = createVueApp( handlers )
 
         handlers.openFolder( null, f => vueApp.args = f )
 
