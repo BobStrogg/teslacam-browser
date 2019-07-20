@@ -1,9 +1,9 @@
 ( function ( root, factory )
 {
-	if ( typeof define === 'function' && define.amd ) define( [], factory );
-	else if ( typeof exports === 'object' ) module.exports = factory();
-	else root.ui = factory();
-}( typeof self !== 'undefined' ? self : this, function ()
+	if ( typeof define === 'function' && define.amd ) define( [ "./helpers" ], factory );
+	else if ( typeof exports === 'object' ) module.exports = factory( require( "./helpers" ) );
+	else root.ui = factory( root.helpers );
+}( typeof self !== 'undefined' ? self : this, function ( helpers )
 {
     function createVueApp( handlers )
     {
