@@ -217,8 +217,7 @@
           copyFilePaths: filePaths => ipcRenderer.send("copyFilePaths", filePaths),
           copyPath: path => ipcRenderer.send("copyPath", path),
           openExternal: path => ipcRenderer.send("openExternal", path)
-        },
-        helpers )
+        } )
     })();
 
   </script>
