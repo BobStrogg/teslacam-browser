@@ -145,7 +145,7 @@
                   </div>
                   <div class="px-2 flex-grow-1 controls">
                     <input class="custom-range scrub" v-model="currentTime" type="range" :max="duration"
-                      @input="controls.playing = false"></input>
+                      @input="controls.playing = false"/>
                   </div>
                   <div class="px-2 controls">
                     <select class="form-control" v-model="controls.speed">
@@ -179,7 +179,7 @@
                     </div>
                     <div class="px-2 flex-grow-1 controls" v-if="timespan.visible">
                       <input class="custom-range scrub" v-model="timespan.currentTime" type="range"
-                        :max="timespan.duration" @input="scrubInput( timespan )"></input>
+                        :max="timespan.duration" @input="scrubInput( timespan )"/>
                     </div>
                     <div class="px-2 controls">
                       <select class="form-control" v-model="controls.speed">
@@ -235,7 +235,6 @@
           reopenFolders: success => $.getJSON("reopenFolders", success),
           openFolder: (p, success) => $.getJSON( p ? "openFolder" + p : "openDefaultFolder", a => success( lastArgs = a ) ),
           getFiles: (p, success) => $.getJSON("files/" + p, success),
-          getVideoPath: p => "videos/" + p,
           openBrowser: () => $.post("openBrowser"),
           deleteFiles: files => $.post("deleteFiles", files),
           deleteFolder: folder => $.post("deleteFolder", folder),

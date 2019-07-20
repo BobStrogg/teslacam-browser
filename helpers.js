@@ -81,26 +81,6 @@
 		return groupBy( fileInfos, f => f.date.toString() )
 	}
 
-	function getTimes( dateGroups, date )
-	{
-		var times = []
-		var timeValues = dateGroups.get( date.toDateString() )
-
-		if ( timeValues )
-		{
-			for ( var time of timeValues )
-			{
-				var name = new Date( time.date ).toLocaleTimeString()
-
-				if ( time.recent ) name += " (Recent)"
-
-				times.push( { time: time, name: name } )
-			}
-		}
-
-		return times
-	}
-
 	function isInViewport( elem )
 	{
 		var bounding = elem.getBoundingClientRect()
@@ -119,7 +99,6 @@
 		extractDate: extractDate,
 		groupBy: groupBy,
 		groupFiles: groupFiles,
-		getTimes: getTimes,
 		isInViewport: isInViewport
 	}
 } ) );

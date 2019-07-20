@@ -140,7 +140,7 @@
                   </div>
                   <div class="px-2 flex-grow-1 controls">
                     <input class="custom-range scrub" v-model="currentTime" type="range" :max="duration"
-                      @input="controls.playing = false"></input>
+                      @input="controls.playing = false"/>
                   </div>
                   <div class="px-2 controls">
                     <select class="form-control" v-model="controls.speed">
@@ -173,7 +173,7 @@
                     </div>
                     <div class="px-2 flex-grow-1 controls" v-if="timespan.visible">
                       <input class="custom-range scrub" v-model="timespan.currentTime" type="range"
-                        :max="timespan.duration" @input="scrubInput( timespan )"></input>
+                        :max="timespan.duration" @input="scrubInput( timespan )"/>
                     </div>
                     <div class="px-2 controls">
                       <select class="form-control" v-model="controls.speed">
@@ -210,8 +210,7 @@
           openFolders: success => success(ipcRenderer.sendSync("openFolders")),
           reopenFolders: success => success(ipcRenderer.sendSync("reopenFolders")),
           openFolder: (p, success) => success(ipcRenderer.sendSync("openFolder", p)),
-          getFiles: (p, success) => fs.readdir(path.join(vueApp.args.folder, p), (err, dir) => success(dir)),
-          getVideoPath: p => path.join( vueApp.args.folder, p ),
+          getFiles: (p, success) => success(ipcRenderer.sendSync("getFiles", p)),
           openBrowser: () => ipcRenderer.send("openBrowser"),
           deleteFiles: files => ipcRenderer.send("deleteFiles", files),
           deleteFolder: folder => ipcRenderer.send("deleteFolder", folder),

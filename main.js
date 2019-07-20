@@ -5,6 +5,7 @@ const services = require( "./services" )
 const { autoUpdater } = require( "electron-updater" )
 const settings = require( "electron-settings" )
 const fs = require( "fs" )
+const path = require( "path" )
 const express = require( "express" )
 
 autoUpdater.checkForUpdatesAndNotify()
@@ -99,11 +100,12 @@ function initialize()
 		services.setFolder( "" )
 	}
 
-	function setFolder( folder )
+	function setFolder( args )
 	{
-		settings.set( "folder", folder )
+		services.setFolder( args.folder )
+		settings.set( "folder", args.folder )
 
-		return folder
+		return args
 	}
 
 	function open()
@@ -134,10 +136,11 @@ function initialize()
 	ipcMain.on( "openFolders", event => event.returnValue = open() )
 	ipcMain.on( "reopenFolders", event => event.returnValue = services.reopenFolders() )
 	ipcMain.on( "openFolder", ( event, folder ) => event.returnValue = setFolder( services.openFolder( folder ) ) )
+	ipcMain.on( "getFiles", ( event, p ) => event.returnValue = services.getFiles( p, f => path.join( services.args().folder, f ) ) )
 	ipcMain.on( "openBrowser", event => browse() )
 	ipcMain.on( "deleteFiles", ( event, files ) => services.deleteFiles( files ) )
 	ipcMain.on( "copyFilePaths", ( event, filePaths ) => clipboard.writeText( services.copyFilePaths( filePaths ) ) )
 	ipcMain.on( "deleteFolder", ( event, folder ) => services.deleteFolder( folder ) )
-	ipcMain.on( "copyPath", ( event, path ) => clipboard.writeText( services.copyPath( path ) ) )
-	ipcMain.on( "openExternal", ( event, path ) => shell.showItemInFolder( path ) )
+	ipcMain.on( "copyPath", ( event, p ) => clipboard.writeText( services.copyPath( p ) ) )
+	ipcMain.on( "openExternal", ( event, p ) => shell.showItemInFolder( p ) )
 }
