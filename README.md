@@ -10,7 +10,7 @@ Basic video playback controls let you view all available cameras side-by-side.  
 
 Installation packages are available on the [Releases](https://github.com/BobStrogg/teslacam-browser/releases) page.
 
-## Running from command line
+## Running from the command line
 
 While using the installation packages is the simplest option, you can also run the app from the command line (you'll need to ensure [Electron](https://electronjs.org/docs/tutorial/installation) is installed first).
 
@@ -20,7 +20,7 @@ npm install
 electron .
 ```
 
-## Running as headless server
+## Running as a headless server
 
 You can run the app as a standalone headless server, even on a Raspberry Pi:
 
