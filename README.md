@@ -10,10 +10,30 @@ Basic video playback controls let you view all available cameras side-by-side.  
 
 Installation packages are available on the [Releases](https://github.com/BobStrogg/teslacam-browser/releases) page.
 
+## Running from command line
+
+While using the installation packages is the simplest option, you can also run the app from the command line (you'll need to ensure [Electron](https://electronjs.org/docs/tutorial/installation) is installed first).
+
+```
+cd teslacam-browser
+npm install
+electron .
+```
+
+## Running as headless server
+
+You can run the app as a standalone headless server, even on a Raspberry Pi:
+
+```
+cd teslacam-browser
+npm install
+node server.js /path/to/TeslaCam
+```
+
 ## HEVC codec
 
 It appears newer Tesla software versions encode video in HEVC / H-265 format, which Chrome seems unable to handle.  All you'll see are blank areas where the videos should be, and clicking "Play" will throw an error (shown in a red box).  If this occurs, clicking the "Browse" button will attempt to open the app in your default web browser.  If it still doesn't work, opening the same address in Safari (macOS) or Edge (Windows) should help.
-
+ 
 ## tesla_dashcam
 
 If you've installed [tesla_dashcam](https://github.com/ehendrix23/tesla_dashcam), you can use it to merge clips from the command-line using a folder path provided by TeslaCam Browser:
