@@ -30,6 +30,8 @@ npm install
 node server.js /path/to/TeslaCam
 ```
 
+You can then open the app in a browser by pointing to http://localhost:8088 (replace `localhost` with address of your server).
+
 ## HEVC codec
 
 It appears newer Tesla software versions encode video in HEVC / H-265 format, which Chrome seems unable to handle.  All you'll see are blank areas where the videos should be, and clicking "Play" will throw an error (shown in a red box).  If this occurs, clicking the "Browse" button will attempt to open the app in your default web browser.  If it still doesn't work, opening the same address in Safari (macOS) or Edge (Windows) should help.
