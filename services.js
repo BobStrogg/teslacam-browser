@@ -195,7 +195,7 @@
 			}
 		}
 
-		var subFolders = []
+		var subfolders = []
 
 		try
 		{

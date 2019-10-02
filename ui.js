@@ -438,7 +438,7 @@
                 }
             },
             template:
-                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" title="Open in file explorer" @click="openExternal" @canplaythrough="loaded" playsinline></video>`,
+                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" crossorigin="anonymous" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" title="Open in file explorer" @click="openExternal" @canplaythrough="loaded" playsinline></video>`,
             watch:
             {
                 "timespan.playing":
@@ -468,11 +468,11 @@
 
                                             video.style.opacity = 1.0
                                             video.currentTime = 0.0
-                                            video.play().catch( e => this.error = e.message )
+                                            video.play().catch( e => { this.error = e.message; console.error( e.message ); } )
                                         },
                                         delay * 1000 )
                                 }
-                                else
+                                else if ( isFinite( currentTime ) && !isNaN( currentTime ) )
                                 {
                                     console.log( `Playing ${this.view.filePath}` )
 
@@ -480,7 +480,7 @@
 
                                     video.style.opacity = 1.0
                                     video.currentTime = currentTime
-                                    video.play().catch( e => this.error = e.message )
+                                    video.play().catch( e => { this.error = e.message; console.error( e.message ); } )
                                 }
                             }
                             else
