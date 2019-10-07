@@ -102,7 +102,7 @@
 	{
 		if ( !folder ) folder = lastArgs.folder
 
-		var specialFolders = [ "TeslaCam", "SavedClips", "RecentClips" ]
+		var specialFolders = [ "TeslaCam", "SavedClips", "RecentClips", "TeslaSentry" ]
 		var folderInfos = []
 
 		function addSubfolders( baseFolder )
