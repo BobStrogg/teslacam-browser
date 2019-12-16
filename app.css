@@ -80,3 +80,8 @@ html, body
   height: auto;
   cursor: pointer;
 }
+.custom-range
+{
+	/* HACK: fix the custom scrub bar slow expansion in Edge */
+	width: 98% !important;
+}
