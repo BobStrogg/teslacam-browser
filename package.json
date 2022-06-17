@@ -59,7 +59,7 @@
   "devDependencies": {
     "@popperjs/core": "^2.1.0",
     "bootstrap-vue": "^2.6.1",
-    "electron": "^9.4.0",
+    "electron": "^15.5.5",
     "electron-builder": "^22.4.0",
     "mime": "^2.4.4"
   },
