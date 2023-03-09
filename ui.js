@@ -66,7 +66,7 @@
                 {
                     function makeTimespan( key, value )
                     {
-                        var viewOrder = [ "left_repeater", "front", "back", "right_repeater" ]
+                        var viewOrder = [ "front", "right_repeater", "back", "left_repeater" ]
                         var views = Array.from( value )
 
                         views.sort( ( v1, v2 ) => viewOrder.indexOf( v1.camera ) - viewOrder.indexOf( v2.camera ) )
@@ -304,7 +304,7 @@
 
                     var time = new Date( timespan.time )
 
-                    time.setSeconds( time.getSeconds() - timespan.duration + Number( timespan.currentTime ) )
+                    time.setSeconds( time.getSeconds() + Number( timespan.currentTime ) )
 
                     return time
                 }

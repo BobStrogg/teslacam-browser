@@ -82,7 +82,7 @@
 
 	function deleteFolder( folder )
 	{
-		var folderPath = path.join( lastArgs.folders[ 0 ], folder )
+		var folderPath = path.join( lastArgs.folder, folder )
 		var files = fs.readdirSync( folderPath )
 
 		deleteFiles( files.map( f => path.join( folderPath, f ) ) )
