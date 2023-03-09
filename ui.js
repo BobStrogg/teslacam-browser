@@ -304,7 +304,7 @@
 
                     var time = new Date( timespan.time )
 
-                    time.setSeconds( time.getSeconds() - timespan.duration + Number( timespan.currentTime ) )
+                    time.setSeconds( time.getSeconds() + Number( timespan.currentTime ) )
 
                     return time
                 }
