@@ -8,7 +8,6 @@ COPY . .
 RUN npm install
 RUN apt update
 RUN apt install bash-completion
-RUN apt install -y nano
 
 ENTRYPOINT node server.js /media/TeslaCam
 
