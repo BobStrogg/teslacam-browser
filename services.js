@@ -149,7 +149,7 @@
 								var relative = path.relative( folder, folderPath )
 						
 								var eventMeta = getEventMetadata( folderPath )
-							folderInfos.push( { date: date, path: folderPath, relative: relative, recent: false, event: eventMeta } )
+								folderInfos.push( { date: date, path: folderPath, relative: relative, recent: false, event: eventMeta } )
 							}
 
 							addFolder( match )
@@ -172,7 +172,7 @@
 									var relative = path.relative( folder, baseFolder )
 
 									var clipEventMeta = getEventMetadata( baseFolder )
-								folderInfos.push( { date: date, path: baseFolder, relative: relative, recent: true, event: clipEventMeta } )
+									folderInfos.push( { date: date, path: baseFolder, relative: relative, recent: true, event: clipEventMeta } )
 								}
 							}
 						}
