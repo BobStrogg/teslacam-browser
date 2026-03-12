@@ -32,7 +32,8 @@
                     speed: 1
                 },
                 playing: null,
-                loading: null
+                loading: null,
+                eventMeta: null
             },
             watch:
             {
@@ -66,7 +67,7 @@
                 {
                     function makeTimespan( key, value )
                     {
-                        var viewOrder = [ "left_repeater", "front", "back", "right_repeater" ]
+                        var viewOrder = [ "left_repeater", "front", "right_repeater", "back", "cabin" ]
                         var views = Array.from( value )
 
                         views.sort( ( v1, v2 ) => viewOrder.indexOf( v1.camera ) - viewOrder.indexOf( v2.camera ) )
@@ -87,10 +88,11 @@
 
                     if ( newPath )
                     {
-                        handlers.getFiles( newPath, files =>
+                        handlers.getFiles( newPath, result =>
                             {
-                                this.timespans = files
+                                this.timespans = result.clips
                                     .map( ( [ key, value ] ) => makeTimespan( key, value ) )
+                                this.eventMeta = result.event
                             } )
                     }
                     else
