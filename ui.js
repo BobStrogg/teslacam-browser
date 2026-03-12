@@ -98,6 +98,7 @@
                     else
                     {
                         this.timespans = []
+                        this.eventMeta = null
                     }
                 },
                 "args.dates": function( dates, oldDates )
