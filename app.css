@@ -69,9 +69,15 @@ html, body
   cursor: pointer;
 }
 
+#detail .timespan .videoContainer .d-flex
+{
+  flex-wrap: wrap;
+}
+
 #detail .timespan .videoContainer .column
 {
-  width: calc( 100% / 3 );
+  flex: 0 0 calc( 100% / 3 );
+  max-width: calc( 100% / 3 );
 }
 
 #detail .timespan .videoContainer .column video
