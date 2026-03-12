@@ -158,12 +158,30 @@
                 <div class="videoContainer card-body">
                   <div class="alert alert-info" v-if="loading != null">Loading {{ Math.round( loading ) }}%...<span
                       v-if="selectedTime.time.recent"> (Clips from RecentFiles will take longer to load)</span></div>
+                  <div class="alert alert-secondary" v-if="eventMeta">
+                    <strong>Event:</strong>
+                    <span v-if="eventMeta.reason">{{ eventMeta.reason.replace(/_/g, ' ') }}</span>
+                    <span v-if="eventMeta.city"> &mdash; {{ eventMeta.city }}</span>
+                    <span v-if="eventMeta.est_lat && eventMeta.est_lon">
+                      (<a :href="'https://www.google.com/maps?q=' + eventMeta.est_lat + ',' + eventMeta.est_lon" target="_blank">Map</a>)
+                    </span>
+                    <span v-if="eventMeta.timestamp"> &mdash; {{ new Date(eventMeta.timestamp).toLocaleString() }}</span>
+                  </div>
                   <video-group :controls="controls" :timespans="timespans"></video-group>
                   <div class="text-center">{{ timespanTime( controls.timespan ) }}</div>
                 </div>
               </div>
 
               <div v-if="!combineClips">
+                <div class="alert alert-secondary mx-2" v-if="eventMeta">
+                  <strong>Event:</strong>
+                  <span v-if="eventMeta.reason">{{ eventMeta.reason.replace(/_/g, ' ') }}</span>
+                  <span v-if="eventMeta.city"> &mdash; {{ eventMeta.city }}</span>
+                  <span v-if="eventMeta.est_lat && eventMeta.est_lon">
+                    (<a :href="'https://www.google.com/maps?q=' + eventMeta.est_lat + ',' + eventMeta.est_lon" target="_blank">Map</a>)
+                  </span>
+                  <span v-if="eventMeta.timestamp"> &mdash; {{ new Date(eventMeta.timestamp).toLocaleString() }}</span>
+                </div>
                 <div v-for="timespan in timespans" class="timespan card mb-2 mx-2">
                   <div class="d-flex align-items-center titleContainer card-header">
                     <div class="px-2 flex-grow-1 title" title="Show / hide"
