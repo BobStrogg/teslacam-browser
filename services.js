@@ -51,12 +51,31 @@
 		return lastArgs
 	}
 
+	function getEventMetadata( folderPath )
+	{
+		try
+		{
+			var eventFile = path.join( folderPath, "event.json" )
+			if ( fs.existsSync( eventFile ) )
+			{
+				var content = fs.readFileSync( eventFile, "utf8" )
+				return JSON.parse( content )
+			}
+		}
+		catch ( e )
+		{
+			console.log( "Could not read event.json: " + e.message )
+		}
+		return null
+	}
+
 	function getFiles( p, getVideoPath )
 	{
 		var folder = path.join( lastArgs.folder, p )
 		var files = fs.readdirSync( folder )
+		var eventMeta = getEventMetadata( folder )
 
-		return Array.from( helpers.groupFiles( p, files, getVideoPath ) )
+		return { clips: Array.from( helpers.groupFiles( p, files, getVideoPath ) ), event: eventMeta }
 	}
 
 	function deleteFiles( files )
@@ -102,7 +121,7 @@
 	{
 		if ( !folder ) folder = lastArgs.folder
 
-		var specialFolders = [ "TeslaCam", "SavedClips", "RecentClips", "SentryClips", "TeslaSentry" ]
+		var specialFolders = [ "TeslaCam", "SavedClips", "RecentClips", "SentryClips", "TeslaSentry", "TrackMode" ]
 		var folderInfos = []
 
 		function addSubfolders( baseFolder )
@@ -129,7 +148,8 @@
 								var folderPath = path.join( baseFolder, subfolder )
 								var relative = path.relative( folder, folderPath )
 						
-								folderInfos.push( { date: date, path: folderPath, relative: relative, recent: false } )
+								var eventMeta = getEventMetadata( folderPath )
+								folderInfos.push( { date: date, path: folderPath, relative: relative, recent: false, event: eventMeta } )
 							}
 
 							addFolder( match )
@@ -151,7 +171,8 @@
 								{
 									var relative = path.relative( folder, baseFolder )
 
-									folderInfos.push( { date: date, path: baseFolder, relative: relative, recent: true } )
+									var clipEventMeta = getEventMetadata( baseFolder )
+									folderInfos.push( { date: date, path: baseFolder, relative: relative, recent: true, event: clipEventMeta } )
 								}
 							}
 						}
@@ -270,6 +291,7 @@
         openFolder: openFolder,
 		args: args,
 		getFiles: getFiles,
+		getEventMetadata: getEventMetadata,
         deleteFiles: deleteFiles,
         copyFilePaths: copyFilePaths,
         deleteFolder: deleteFolder,
