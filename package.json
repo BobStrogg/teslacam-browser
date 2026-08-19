@@ -35,8 +35,12 @@
       ],
       "icon": "build/icons/icon.icns",
       "target": [
-        "pkg",
-        "zip"
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
       ]
     },
     "linux": {
@@ -59,8 +63,8 @@
   "devDependencies": {
     "@popperjs/core": "^2.1.0",
     "bootstrap-vue": "^2.6.1",
-    "electron": "^9.4.0",
-    "electron-builder": "^22.4.0",
+    "electron": "^42.0.0",
+    "electron-builder": "^26.15.0",
     "mime": "^2.4.4"
   },
   "dependencies": {

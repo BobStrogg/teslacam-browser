@@ -8,7 +8,8 @@ const fs = require( "fs" )
 const path = require( "path" )
 const express = require( "express" )
 
-autoUpdater.checkForUpdatesAndNotify()
+// Désactivé : pointe par défaut sur les releases GitHub de BobStrogg, pas les nôtres.
+// autoUpdater.checkForUpdatesAndNotify()
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -23,7 +24,8 @@ function createWindow()
 		height: 700,
 		webPreferences:
 		{
-			nodeIntegration: true
+			nodeIntegration: true,
+			contextIsolation: false
 		}
 	} )
 
@@ -108,20 +110,11 @@ function initialize()
 		return args
 	}
 
-	function open()
-	{
-		var folders = dialog.showOpenDialog( { properties: [ "openDirectory" ] } )
-
-		if ( folders ) settings.set( "folders", folders )
-
-		return openFolders( folders )
-	}
-
 	services.initializeExpress( port )
 
 	function open()
 	{
-		var folders = dialog.showOpenDialog( { properties: [ "openDirectory" ] } )
+		var folders = dialog.showOpenDialogSync( { properties: [ "openDirectory" ] } )
 
 		return services.openFolders( folders )
 	}
