@@ -103,9 +103,10 @@
 		if ( !folder ) folder = lastArgs.folder
 
 		var specialFolders = [ "TeslaCam", "SavedClips", "RecentClips", "SentryClips", "TeslaSentry" ]
+		var categoryNames = { SavedClips: "Saved", RecentClips: "Recent", SentryClips: "Sentry", TeslaSentry: "Sentry" }
 		var folderInfos = []
 
-		function addSubfolders( baseFolder )
+		function addSubfolders( baseFolder, category )
 		{
 			try
 			{
@@ -115,7 +116,11 @@
 				{
 					if ( specialFolders.includes( subfolder ) )
 					{
-						addSubfolders( path.join( baseFolder, subfolder ) )
+						// "TeslaCam" is just a wrapper folder, not a category of its own —
+						// keep whatever category was already known when recursing through it.
+						var nextCategory = categoryNames[ subfolder ] || category
+
+						addSubfolders( path.join( baseFolder, subfolder ), nextCategory )
 					}
 					else
 					{
@@ -129,7 +134,7 @@
 								var folderPath = path.join( baseFolder, subfolder )
 								var relative = path.relative( folder, folderPath )
 						
-								folderInfos.push( { date: date, path: folderPath, relative: relative, recent: false } )
+								folderInfos.push( { date: date, path: folderPath, relative: relative, recent: false, category: category } )
 							}
 
 							addFolder( match )
@@ -151,7 +156,7 @@
 								{
 									var relative = path.relative( folder, baseFolder )
 
-									folderInfos.push( { date: date, path: baseFolder, relative: relative, recent: true } )
+									folderInfos.push( { date: date, path: baseFolder, relative: relative, recent: true, category: category } )
 								}
 							}
 						}
@@ -165,7 +170,7 @@
 
 		folder = path.normalize( ( folder || "" ) + path.sep )
 
-		addSubfolders( folder )
+		addSubfolders( folder, null )
 
 		var dateGroups = helpers.groupBy( folderInfos, g => g.date.toDateString() )
 		var dates = Array.from( dateGroups.keys() ).map( d => new Date( d ) )

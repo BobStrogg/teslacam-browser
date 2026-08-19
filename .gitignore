@@ -1,4 +1,4 @@
 node_modules
 dist
 *.icloud
-*.icloud
+*.icloud.env
