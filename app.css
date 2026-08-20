@@ -1,6 +1,72 @@
+/* ==========================================================================
+   TeslaCam Browser — theme
+   Direction: dashcam on-screen-display. Graphite body, amber for primary
+   actions (turn-signal / hazard warning), cyan for live/info state
+   (backup-camera guide lines), monospace for anything that is really a
+   timestamp — because in real dashcam footage, timestamps *are* monospace
+   burned-in text. Everything else stays quiet.
+   ========================================================================== */
+
+:root
+{
+  --bg: #14171b;
+  --panel: #1b1f24;
+  --panel-2: #232830;
+  --border: #2c323b;
+  --text: #e8eaed;
+  --text-dim: #8b939f;
+
+  --accent: #f2a93b;       /* amber — primary actions */
+  --accent-dark: #c98726;
+  --accent-ink: #1a1300;   /* text drawn on top of the accent color */
+  --info: #4fd1e0;         /* cyan — informational / active state */
+  --danger: #e5595e;
+  --success: #34c17c;
+
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+
+  --radius: 8px;
+
+  color-scheme: dark;
+}
+
+/* Auto day / night: follows the OS appearance setting (System Settings ›
+   General › Appearance on macOS) — no toggle needed, Chromium reports the
+   system preference straight to prefers-color-scheme. */
+@media (prefers-color-scheme: light)
+{
+  :root
+  {
+    --bg: #f3f4f6;
+    --panel: #ffffff;
+    --panel-2: #edeff2;
+    --border: #d8dce2;
+    --text: #1a1d21;
+    --text-dim: #5b6470;
+
+    --accent: #c97a12;
+    --accent-dark: #a5630e;
+    --accent-ink: #fff8ee;
+    --info: #0e8fa0;
+    --danger: #c13438;
+    --success: #1a8a54;
+
+    color-scheme: light;
+  }
+
+  .flatpickr-calendar
+  {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+}
+
 html, body
 {
     height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
 }
 
 [v-cloak]
@@ -13,33 +79,85 @@ html, body
     height: 100%;
 }
 
+/* ---- Header --------------------------------------------------------- */
+
 #heading
 {
-  min-height: 80px;
+  min-height: 72px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 0 8px;
+}
+
+.brand-mark
+{
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  position: relative;
+  margin: 0 2px;
+}
+
+.brand-mark::after
+{
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(-50%, -50%);
 }
 
 #heading .heading
 {
-  font-size: 32pt;
+  font-size: 20pt;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   cursor: pointer;
+  color: var(--text);
 }
 
 #heading .version
 {
-  font-size: 24pt;
-  color: lightgray;
+  font-family: var(--mono);
+  font-size: 11pt;
+  color: var(--info);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 10px;
 }
 
 #heading .credits
 {
-  font-size: 12pt;
-  color: darkgray;
+  font-size: 9pt;
+  color: var(--text-dim);
 }
+
+.donate img[alt="Donate with PayPal button"],
+.donate input[type="image"]
+{
+  filter: grayscale(1) opacity(0.6);
+  border-radius: 4px;
+}
+
+.custom-control-label
+{
+  color: var(--text-dim);
+  font-size: 10pt;
+}
+
+/* ---- Layout ----------------------------------------------------------- */
 
 #content
 {
   align-items: stretch;
   height: 100%;
+  background: var(--bg);
 }
 
 #sidebar
@@ -47,6 +165,9 @@ html, body
   min-width: 320px;
   max-width: 320px;
   overflow-x: hidden;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  transition: margin-left 0.15s ease;
 }
 
 #sidebar.hidden
@@ -54,14 +175,243 @@ html, body
     margin-left: -320px;
 }
 
+#sidebar .navigation
+{
+  padding-top: 12px;
+}
+
+#sidebar a
+{
+  color: var(--text-dim);
+  text-decoration: none;
+}
+
+#sidebar a:hover
+{
+  color: var(--info);
+}
+
 #times
 {
   overflow-y: auto;
 }
 
+/* clip timestamps read like an OSD — monospace, tabular */
+.list-group.times .list-group-item
+{
+  background: transparent;
+  border: none;
+  border-left: 2px solid transparent;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 10.5pt;
+  padding: 6px 10px;
+  border-radius: 0;
+}
+
+.list-group.times .list-group-item:hover
+{
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.list-group.times .list-group-item.active
+{
+  background: var(--panel-2);
+  border-left-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
 #videos
 {
   overflow-y: auto;
+  background: var(--bg);
+  padding-top: 8px;
+}
+
+/* ---- Buttons ------------------------------------------------------------ */
+
+.btn
+{
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 10.5pt;
+  border-width: 1px;
+}
+
+.btn-primary
+{
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active
+{
+  background: var(--accent-dark) !important;
+  border-color: var(--accent-dark) !important;
+  color: var(--accent-ink) !important;
+}
+
+.btn-secondary
+{
+  background: var(--panel-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+.btn-secondary:hover
+{
+  background: var(--border);
+  color: var(--text);
+}
+
+.btn-success
+{
+  background: var(--success);
+  border-color: var(--success);
+  color: #04170c;
+}
+
+.btn-warning
+{
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-danger
+{
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.btn-danger:hover
+{
+  background: var(--danger);
+  color: #1a0304;
+}
+
+.btn-info
+{
+  background: transparent;
+  border-color: var(--info);
+  color: var(--info);
+}
+.btn-info:hover
+{
+  background: var(--info);
+  color: #04171a;
+}
+
+/* folder picker + open/browse row */
+#sidebar .btn-primary.dropdown-toggle
+{
+  background: var(--panel-2);
+  border-color: var(--border);
+  color: var(--text);
+  text-align: left;
+  font-weight: 500;
+  font-family: var(--mono);
+  font-size: 9.5pt;
+}
+#sidebar .btn-primary.dropdown-toggle:hover
+{
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---- Calendar (flatpickr) ---------------------------------------------- */
+
+#calendar,
+.form-control
+{
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+}
+.form-control:focus
+{
+  background: var(--panel-2);
+  color: var(--text);
+  border-color: var(--info);
+  box-shadow: none;
+}
+
+.flatpickr-calendar
+{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.flatpickr-months, .flatpickr-weekdays
+{
+  background: var(--panel);
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year
+{
+  color: var(--text);
+  background: transparent;
+}
+span.flatpickr-weekday
+{
+  color: var(--text-dim);
+}
+.flatpickr-day
+{
+  color: var(--text);
+}
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay
+{
+  color: #454b54;
+}
+.flatpickr-day:hover
+{
+  background: var(--panel-2);
+}
+.flatpickr-day.selected,
+.flatpickr-day.today
+{
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.flatpickr-prev-month svg, .flatpickr-next-month svg
+{
+  fill: var(--text-dim);
+}
+
+/* ---- Video cards --------------------------------------------------------- */
+
+.timespan.card
+{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.timespan .titleContainer.card-header
+{
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  min-height: 52px;
+}
+
+.timespan .title
+{
+  font-family: var(--mono);
+  font-size: 10.5pt;
+  color: var(--text);
+}
+
+.timespan .videoContainer.card-body
+{
+  background: #000;
+  padding: 8px;
 }
 
 #detail .timespan .titleContainer .title
@@ -72,6 +422,7 @@ html, body
 #detail .timespan .videoContainer .column
 {
   width: calc( 100% / 3 );
+  padding: 4px;
 }
 
 #detail .timespan .videoContainer .column video
@@ -79,9 +430,54 @@ html, body
   width: 100%;
   height: auto;
   cursor: pointer;
+  border-radius: 4px;
+  background: #000;
 }
+
+.timespan .card-body .text-center
+{
+  font-family: var(--mono);
+  color: var(--info);
+  font-size: 9.5pt;
+  padding-top: 6px;
+}
+
+/* scrub bar: styled like an on-screen progress strip */
 .custom-range
 {
-	/* HACK: fix the custom scrub bar slow expansion in Edge */
 	width: 98% !important;
+	accent-color: var(--accent);
+}
+
+select.form-control
+{
+  font-family: var(--mono);
+  font-size: 9.5pt;
+}
+
+.alert-info
+{
+  background: rgba(79, 209, 224, 0.12);
+  border: 1px solid rgba(79, 209, 224, 0.35);
+  color: var(--info);
+  border-radius: var(--radius);
+}
+
+::-webkit-scrollbar
+{
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track
+{
+  background: transparent;
+}
+::-webkit-scrollbar-thumb
+{
+  background: var(--border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover
+{
+  background: var(--text-dim);
 }

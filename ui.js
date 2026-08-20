@@ -225,7 +225,8 @@
                                 {
                                     var name = new Date( time.date ).toLocaleTimeString()
                     
-                                    if ( time.recent ) name += " (Recent)"
+                                    if ( time.category ) name += " (" + time.category + ")"
+                                    else if ( time.recent ) name += " (Recent)"
                     
                                     times.push( { time: time, name: name } )
                                 }
