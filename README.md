@@ -27,7 +27,7 @@ Watching the latest event in the car or in the phone app is enough for a lot of 
 
 Packages, when cut, are on the [Releases](https://github.com/BobStrogg/teslacam-browser/releases) page. macOS builds are universal (Apple Silicon and Intel). Code signing stays in the builder's environment. Do not commit an `.env` or a certificate.
 
-The desktop shell is Electron 45 (Chromium 156). It does not run on macOS Big Sur 11.
+The desktop shell is Electron 45 (Chromium 156). Electron 45 supports macOS Ventura (13) and newer, Windows 10 and newer, and current Linux distributions. It does not run on macOS Big Sur (11) or Monterey (12).
 
 ## Running from the command line
 
