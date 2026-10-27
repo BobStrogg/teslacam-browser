@@ -9,13 +9,13 @@
   <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="node_modules/open-iconic/font/css/open-iconic-bootstrap.css" />
   <link rel="stylesheet" href="app.css" />
+  <script type="text/javascript" src="node_modules/jquery/dist/jquery.min.js"></script>
+  <script type="text/javascript" src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script type="text/javascript" src="node_modules/vue/dist/vue.js"></script>
   <script type="text/javascript" src="node_modules/flatpickr/dist/flatpickr.min.js"></script>
-  <script>const $ = require("jquery");</script>
-  <script>const bootstrap = require("bootstrap");</script>
-  <script>const path = require("path");</script>
-  <script>const helpers = require("./helpers");</script>
-  <script>const ui = require("./ui");</script>
+  <script type="text/javascript" src="helpers.js"></script>
+  <script type="text/javascript" src="hevc.js"></script>
+  <script type="text/javascript" src="ui.js"></script>
 
 </head>
 
@@ -49,16 +49,6 @@
           </div>
 
           <div class="p-2 donate mt-2">
-            <div class="d-flex flex-row-reverse">
-              <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
-                <input type="hidden" name="cmd" value="_donations" />
-                <input type="hidden" name="business" value="32J86B5QYPD6Y" />
-                <input type="hidden" name="currency_code" value="USD" />
-                <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0"
-                  name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
-                <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
-              </form>
-            </div>
             <div class="d-flex flex-row custom-control custom-switch mr-2">
               <input type="checkbox" v-model="combineClips" class="custom-control-input" id="combineClips">
               <label class="custom-control-label" for="combineClips">Combine clips</label>
@@ -125,6 +115,10 @@
           </nav>
 
           <div id="detail" class="d-flex flex-column flex-grow-1">
+
+            <div class="alert alert-warning m-2" v-if="hevc && hevc.supported === false">
+              <strong>HEVC playback unavailable.</strong> {{ hevc.message }}
+            </div>
 
             <div id="videos">
 
@@ -220,21 +214,20 @@
 
   <script type="text/javascript">
     (function () {
-      const { ipcRenderer } = require("electron")
-      const fs = require("fs")
+      var api = window.teslacam
 
-      var vueApp = ui.initialize(
+      ui.initialize(
         {
-          openFolders: success => success(ipcRenderer.sendSync("openFolders")),
-          reopenFolders: success => success(ipcRenderer.sendSync("reopenFolders")),
-          openFolder: (p, success) => success(ipcRenderer.sendSync("openFolder", p)),
-          getFiles: (p, success) => success(ipcRenderer.sendSync("getFiles", p)),
-          openBrowser: () => ipcRenderer.send("openBrowser"),
-          deleteFiles: files => ipcRenderer.send("deleteFiles", files),
-          deleteFolder: folder => ipcRenderer.send("deleteFolder", folder),
-          copyFilePaths: filePaths => ipcRenderer.send("copyFilePaths", filePaths),
-          copyPath: path => ipcRenderer.send("copyPath", path),
-          openExternal: path => ipcRenderer.send("openExternal", path)
+          openFolders: success => success(api.openFolders()),
+          reopenFolders: success => success(api.reopenFolders()),
+          openFolder: (p, success) => success(api.openFolder(p)),
+          getFiles: (p, success) => success(api.getFiles(p)),
+          openBrowser: () => api.openBrowser(),
+          deleteFiles: files => api.deleteFiles(files),
+          deleteFolder: folder => api.deleteFolder(folder),
+          copyFilePaths: filePaths => api.copyFilePaths(filePaths),
+          copyPath: path => api.copyPath(path),
+          openExternal: path => api.openExternal(path)
         } )
     })();
 

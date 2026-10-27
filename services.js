@@ -9,6 +9,25 @@
 	var version = "0.0.1"
 	var lastArgs = { version: version, folder: "" }
 
+	function installRangeHandler()
+	{
+		// Empty or still-growing clips make `send` reject the byte range (#27).
+		// Registered after each /videos mount so it sits later in the stack than that static middleware.
+		expressApp.use( ( err, request, response, next ) =>
+		{
+			var status = err && ( err.status || err.statusCode )
+
+			if ( status === 416 )
+			{
+				if ( !response.headersSent ) response.status( 416 ).type( "txt" ).send( "Range not satisfiable" )
+
+				return
+			}
+
+			next( err )
+		} )
+	}
+
     function setVersion( v )
     {
 		version = v
@@ -24,7 +43,9 @@
 
 	function reopenFolders()
 	{
-		return lastArgs ? openFolders( lastArgs.folders ) : lastArgs
+		if ( lastArgs && lastArgs.folder ) return openFolder( lastArgs.folder )
+
+		return lastArgs
 	}
 
 	function openFolders( folders )
@@ -41,6 +62,8 @@
 				"/videos",
 				express.static( folder ),
 				serveIndex( folder, { 'icons': true } ) )
+
+			installRangeHandler()
 		}
 
 		return lastArgs
@@ -80,6 +103,8 @@
 
 	function deleteFiles( files )
 	{
+		if ( !files || typeof files.length !== "number" || files.length < 1 ) return
+
 		console.log( `Deleting files: ${files}` )
 
 		for ( var file of files ) fs.unlinkSync( file )
@@ -121,10 +146,25 @@
 	{
 		if ( !folder ) folder = lastArgs.folder
 
+		if ( !folder )
+		{
+			return {
+				folder: "",
+				folderInfos: [],
+				dateGroups: [],
+				dates: [],
+				parsedFolder: path.parse( "" ),
+				folderPathParts: [],
+				subfolders: [],
+				version: version
+			}
+		}
+
 		var specialFolders = [ "TeslaCam", "SavedClips", "RecentClips", "SentryClips", "TeslaSentry", "TrackMode" ]
+		var categoryNames = { SavedClips: "Saved", RecentClips: "Recent", SentryClips: "Sentry", TeslaSentry: "Sentry", TrackMode: "Track" }
 		var folderInfos = []
 
-		function addSubfolders( baseFolder )
+		function addSubfolders( baseFolder, category )
 		{
 			try
 			{
@@ -134,7 +174,9 @@
 				{
 					if ( specialFolders.includes( subfolder ) )
 					{
-						addSubfolders( path.join( baseFolder, subfolder ) )
+						var nextCategory = categoryNames[ subfolder ] || category
+
+						addSubfolders( path.join( baseFolder, subfolder ), nextCategory )
 					}
 					else
 					{
@@ -149,7 +191,7 @@
 								var relative = path.relative( folder, folderPath )
 						
 								var eventMeta = getEventMetadata( folderPath )
-								folderInfos.push( { date: date, path: folderPath, relative: relative, recent: false, event: eventMeta } )
+								folderInfos.push( { date: date, path: folderPath, relative: relative, recent: false, event: eventMeta, category: category } )
 							}
 
 							addFolder( match )
@@ -172,7 +214,23 @@
 									var relative = path.relative( folder, baseFolder )
 
 									var clipEventMeta = getEventMetadata( baseFolder )
-									folderInfos.push( { date: date, path: baseFolder, relative: relative, recent: true, event: clipEventMeta } )
+									folderInfos.push( { date: date, path: baseFolder, relative: relative, recent: true, event: clipEventMeta, category: category } )
+								}
+							}
+							else if ( /^\d{4}-\d{2}-\d{2}$/.test( subfolder ) )
+							{
+								// RecentClips sometimes nests clips in a date folder
+								// (RecentClips/2023-12-04/2023-12-04_12-23-59-front.mp4).
+								// Only those date folders are walked, not every directory on the drive.
+								try
+								{
+									var datedPath = path.join( baseFolder, subfolder )
+
+									if ( fs.lstatSync( datedPath ).isDirectory() ) addSubfolders( datedPath, category )
+								}
+								catch ( e )
+								{
+									console.error( e && e.message ? e.message : e )
 								}
 							}
 						}
@@ -181,12 +239,13 @@
 			}
 			catch (e)
 			{
+				console.error( e && e.message ? e.message : e )
 			}
 		}
 
 		folder = path.normalize( ( folder || "" ) + path.sep )
 
-		addSubfolders( folder )
+		addSubfolders( folder, null )
 
 		var dateGroups = helpers.groupBy( folderInfos, g => g.date.toDateString() )
 		var dates = Array.from( dateGroups.keys() ).map( d => new Date( d ) )
@@ -226,6 +285,7 @@
 		}
 		catch (e)
 		{
+			console.error( e && e.message ? e.message : e )
 		}
 
 		return {
@@ -253,8 +313,13 @@
 				express.static( args.folder ),
 				serveIndex( args.folder, { 'icons': true } ) )
 
+			installRangeHandler()
+
 			return args
 		}
+
+		expressApp.use( express.json( { limit: "1mb" } ) )
+		expressApp.use( express.urlencoded( { extended: false, limit: "1mb" } ) )
 
         expressApp.get( "/", ( request, response ) => response.sendFile( __dirname + "/external.html" ) )
         expressApp.get( "/openFolders", ( request, response ) => response.send( openFolders() ) )

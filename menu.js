@@ -65,7 +65,7 @@ exports.initialize = ( selectFolders ) =>
 	{
 		template.unshift(
 			{
-				label: app.getName(),
+				label: app.name,
 				submenu:
 				[
 					{ role: 'about' },

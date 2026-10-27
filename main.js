@@ -8,7 +8,19 @@ const fs = require( "fs" )
 const path = require( "path" )
 const express = require( "express" )
 
-autoUpdater.checkForUpdatesAndNotify()
+autoUpdater.on( "error", error =>
+{
+	console.log( "Update check failed: " + ( error && error.message ? error.message : error ) )
+} )
+
+try
+{
+	autoUpdater.checkForUpdatesAndNotify()
+}
+catch ( error )
+{
+	console.log( "Update check skipped: " + error.message )
+}
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -23,7 +35,10 @@ function createWindow()
 		height: 700,
 		webPreferences:
 		{
-			nodeIntegration: true
+			preload: path.join( __dirname, "preload.js" ),
+			contextIsolation: true,
+			nodeIntegration: false,
+			sandbox: true
 		}
 	} )
 
@@ -108,20 +123,15 @@ function initialize()
 		return args
 	}
 
-	function open()
-	{
-		var folders = dialog.showOpenDialog( { properties: [ "openDirectory" ] } )
-
-		if ( folders ) settings.set( "folders", folders )
-
-		return openFolders( folders )
-	}
-
 	services.initializeExpress( port )
 
 	function open()
 	{
-		var folders = dialog.showOpenDialog( { properties: [ "openDirectory" ] } )
+		// showOpenDialog() has returned a Promise since Electron 6. The old call
+		// handed that Promise to openFolders(), so choosing a drive did nothing.
+		var folders = dialog.showOpenDialogSync( { properties: [ "openDirectory" ] } )
+
+		if ( folders && folders.length > 0 ) settings.set( "folders", folders )
 
 		return services.openFolders( folders )
 	}
