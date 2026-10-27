@@ -1,11 +1,13 @@
 {
   "name": "teslacam-browser",
   "productName": "TeslaCam Browser",
-  "version": "0.0.956",
+  "version": "0.0.957",
   "description": "A minimal TeslaCam Browser",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "test": "node test/library.test.js",
+    "check-hevc": "electron scripts/check-hevc.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "release": "electron-builder build",
@@ -35,9 +37,23 @@
       ],
       "icon": "build/icons/icon.icns",
       "target": [
-        "pkg",
-        "zip"
-      ]
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "linux": {
       "publish": [
@@ -59,24 +75,25 @@
   "devDependencies": {
     "@popperjs/core": "^2.1.0",
     "bootstrap-vue": "^2.6.1",
-    "electron": "^9.4.0",
-    "electron-builder": "^22.4.0",
+    "electron": "^45.1.0",
+    "electron-builder": "^26.18.0",
     "mime": "^2.4.4"
   },
   "dependencies": {
     "bootstrap": "^4.4.1",
     "buffer-alloc-unsafe": "^1.1.0",
     "electron-settings": "^3.2.0",
-    "electron-updater": "^4.2.4",
-    "express": "^4.17.1",
+    "electron-updater": "^6.8.11",
+    "express": "^4.22.3",
     "flatpickr": "^4.6.3",
     "jquery": "^3.3.1",
     "open-iconic": "^1.1.1",
     "popper.js": "^1.16.1",
-    "rimraf": "^3.0.2",
     "serve-index": "^1.9.1",
-    "vue": "^2.6.11",
-    "yarn": "^1.22.4"
+    "vue": "^2.6.11"
   },
-  "postinstall": "electron-builder install-app-deps"
+  "postinstall": "electron-builder install-app-deps",
+  "resolutions": {
+    "body-parser": "1.20.9"
+  }
 }

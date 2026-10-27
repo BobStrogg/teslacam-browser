@@ -14,6 +14,7 @@
   <script type="text/javascript" src="node_modules/vue/dist/vue.js"></script>
   <script type="text/javascript" src="node_modules/flatpickr/dist/flatpickr.min.js"></script>
   <script type="text/javascript" src="content/helpers.js"></script>
+  <script type="text/javascript" src="content/hevc.js"></script>
   <script type="text/javascript" src="content/ui.js"></script>
 
 </head>
@@ -48,16 +49,6 @@
           </div>
 
           <div class="p-2 donate mt-2">
-            <div class="d-flex flex-row-reverse">
-              <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
-                <input type="hidden" name="cmd" value="_donations" />
-                <input type="hidden" name="business" value="32J86B5QYPD6Y" />
-                <input type="hidden" name="currency_code" value="USD" />
-                <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0"
-                  name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
-                <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
-              </form>
-            </div>
             <div class="d-flex flex-row custom-control custom-switch mr-2">
               <input type="checkbox" v-model="combineClips" class="custom-control-input" id="combineClips">
               <label class="custom-control-label" for="combineClips">Combine clips</label>
@@ -131,6 +122,10 @@
 
           <div id="detail" class="d-flex flex-column flex-grow-1">
 
+            <div class="alert alert-warning m-2" v-if="hevc && hevc.supported === false">
+              <strong>HEVC playback unavailable.</strong> {{ hevc.message }}
+            </div>
+
             <div id="videos">
 
               <div class="timespan card mb-2 mx-2" v-if="combineClips">
@@ -158,12 +153,30 @@
                 <div class="videoContainer card-body">
                   <div class="alert alert-info" v-if="loading != null">Loading {{ Math.round( loading ) }}%...<span
                       v-if="selectedTime.time.recent"> (Clips from RecentFiles will take longer to load)</span></div>
+                  <div class="alert alert-secondary" v-if="eventMeta">
+                    <strong>Event:</strong>
+                    <span v-if="eventMeta.reason">{{ eventMeta.reason.replace(/_/g, ' ') }}</span>
+                    <span v-if="eventMeta.city"> &mdash; {{ eventMeta.city }}</span>
+                    <span v-if="eventMeta.est_lat && eventMeta.est_lon">
+                      (<a :href="'https://www.google.com/maps?q=' + eventMeta.est_lat + ',' + eventMeta.est_lon" target="_blank">Map</a>)
+                    </span>
+                    <span v-if="eventMeta.timestamp"> &mdash; {{ new Date(eventMeta.timestamp).toLocaleString() }}</span>
+                  </div>
                   <video-group :controls="controls" :timespans="timespans"></video-group>
                   <div class="text-center">{{ timespanTime( controls.timespan ) }}</div>
                 </div>
               </div>
 
               <div v-if="!combineClips">
+                <div class="alert alert-secondary mx-2" v-if="eventMeta">
+                  <strong>Event:</strong>
+                  <span v-if="eventMeta.reason">{{ eventMeta.reason.replace(/_/g, ' ') }}</span>
+                  <span v-if="eventMeta.city"> &mdash; {{ eventMeta.city }}</span>
+                  <span v-if="eventMeta.est_lat && eventMeta.est_lon">
+                    (<a :href="'https://www.google.com/maps?q=' + eventMeta.est_lat + ',' + eventMeta.est_lon" target="_blank">Map</a>)
+                  </span>
+                  <span v-if="eventMeta.timestamp"> &mdash; {{ new Date(eventMeta.timestamp).toLocaleString() }}</span>
+                </div>
                 <div v-for="timespan in timespans" class="timespan card mb-2 mx-2">
                   <div class="d-flex align-items-center titleContainer card-header">
                     <div class="px-2 flex-grow-1 title" title="Show / hide"

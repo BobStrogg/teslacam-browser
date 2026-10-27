@@ -32,7 +32,13 @@
                     speed: 1
                 },
                 playing: null,
-                loading: null
+                loading: null,
+                eventMeta: null,
+                hevc: null
+            },
+            created: function()
+            {
+                if ( typeof hevc !== "undefined" ) this.hevc = hevc.detect()
             },
             watch:
             {
@@ -66,10 +72,17 @@
                 {
                     function makeTimespan( key, value )
                     {
-                        var viewOrder = [ "left_repeater", "front", "back", "right_repeater" ]
+                        var viewOrder = [ "left_repeater", "left_pillar", "front", "right_repeater", "right_pillar", "back", "cabin" ]
                         var views = Array.from( value )
 
-                        views.sort( ( v1, v2 ) => viewOrder.indexOf( v1.camera ) - viewOrder.indexOf( v2.camera ) )
+                        function cameraRank( camera )
+                        {
+                            var index = viewOrder.indexOf( camera )
+
+                            return index < 0 ? viewOrder.length : index
+                        }
+
+                        views.sort( ( v1, v2 ) => cameraRank( v1.camera ) - cameraRank( v2.camera ) )
 
                         return {    // Timespan
                             title: key,
@@ -87,15 +100,17 @@
 
                     if ( newPath )
                     {
-                        handlers.getFiles( newPath, files =>
+                        handlers.getFiles( newPath, result =>
                             {
-                                this.timespans = files
+                                this.timespans = result.clips
                                     .map( ( [ key, value ] ) => makeTimespan( key, value ) )
+                                this.eventMeta = result.event
                             } )
                     }
                     else
                     {
                         this.timespans = []
+                        this.eventMeta = null
                     }
                 },
                 "args.dates": function( dates, oldDates )
@@ -225,7 +240,8 @@
                                 {
                                     var name = new Date( time.date ).toLocaleTimeString()
                     
-                                    if ( time.recent ) name += " (Recent)"
+                                    if ( time.category ) name += " (" + time.category + ")"
+                                    else if ( time.recent ) name += " (Recent)"
                     
                                     times.push( { time: time, name: name } )
                                 }
@@ -273,7 +289,7 @@
                     if ( confirm( `Are you sure you want to delete ${files.length} files from ${timespan.title}?` ) )
                     {
                         handlers.deleteFiles( files )
-                        handlers.reopenFolder( this.loaded )
+                        handlers.reopenFolders( this.loaded )
                     }
                 },
                 copyFilePaths: function( timespan )
@@ -289,7 +305,7 @@
                     if ( confirm( `Are you sure you want to delete ${folder}?` ) )
                     {
                         handlers.deleteFolder( folder )
-                        handlers.reopenFolder( this.loaded )
+                        handlers.reopenFolders( this.loaded )
                     }
                 },
                 copyPath: function( path )
@@ -304,7 +320,7 @@
 
                     var time = new Date( timespan.time )
 
-                    time.setSeconds( time.getSeconds() - timespan.duration + Number( timespan.currentTime ) )
+                    time.setSeconds( time.getSeconds() + Number( timespan.currentTime ) )
 
                     return time
                 }
@@ -333,8 +349,8 @@
                                 <synchronized-video :timespan="timespan" :view="view" :playbackRate="controls.speed"></synchronized-video>
                             </div>
                         </div>
-                        <div class="alert alert-danger error" v-show="error">
-                            <div>{{ error }}</div>
+                        <div class="alert alert-danger error" v-show="timespan.playbackError">
+                            <div>{{ timespan.playbackError }}</div>
                             <div @click="openBrowser" style="cursor: pointer;">Try external browser</div>
                         </div>
                     </div>
@@ -409,8 +425,8 @@
                             <synchronized-video :timespan="timespan" :view="view" :playbackRate="controls.speed"></synchronized-video>
                         </div>
                     </div>
-                    <div class="alert alert-danger error" v-show="error">
-                        <div>{{ error }}</div>
+                    <div class="alert alert-danger error" v-show="timespan.playbackError">
+                        <div>{{ timespan.playbackError }}</div>
                         <div @click="openBrowser" style="cursor: pointer;">Try external browser</div>
                     </div>
                 </div>`,
@@ -438,7 +454,7 @@
                 }
             },
             template:
-                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" crossorigin="anonymous" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" title="Open in file explorer" @click="openExternal" @canplaythrough="loaded" playsinline></video>`,
+                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" crossorigin="anonymous" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" @error="mediaError" title="Open in file explorer" @click="openExternal" @canplaythrough="loaded" playsinline></video>`,
             watch:
             {
                 "timespan.playing":
@@ -468,7 +484,7 @@
 
                                             video.style.opacity = 1.0
                                             video.currentTime = 0.0
-                                            video.play().catch( e => { this.error = e.message; console.error( e.message ); } )
+                                            video.play().catch( e => this.reportPlaybackError( e, video ) )
                                         },
                                         delay * 1000 )
                                 }
@@ -480,7 +496,7 @@
 
                                     video.style.opacity = 1.0
                                     video.currentTime = currentTime
-                                    video.play().catch( e => { this.error = e.message; console.error( e.message ); } )
+                                    video.play().catch( e => this.reportPlaybackError( e, video ) )
                                 }
                             }
                             else
@@ -547,6 +563,22 @@
                 openExternal: function()
                 {
                     handlers.openExternal( this.view.file )
+                },
+                mediaError: function( event )
+                {
+                    this.reportPlaybackError( null, event.target )
+                },
+                reportPlaybackError: function( error, video )
+                {
+                    var code = video && video.error && video.error.code
+                    var name = error && error.name
+                    var codecFailure = code === 3 || code === 4 || name === "NotSupportedError"
+
+                    this.timespan.playbackError = ( codecFailure && typeof hevc !== "undefined" )
+                        ? hevc.fallbackMessage()
+                        : ( error && error.message ) || "Playback failed"
+
+                    console.error( this.timespan.playbackError )
                 }
             }
         } )
