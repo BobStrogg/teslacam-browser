@@ -91,3 +91,21 @@ html, body
 	/* HACK: fix the custom scrub bar slow expansion in Edge */
 	width: 98% !important;
 }
+
+.scrub-container
+{
+	position: relative;
+}
+
+/* Where event.json says the Sentry / Saved event happened. */
+.event-marker
+{
+	position: absolute;
+	top: 50%;
+	width: 12px;
+	height: 12px;
+	margin: -6px 0 0 -6px;
+	border-radius: 50%;
+	background: #dc3545;
+	pointer-events: none;
+}

@@ -168,6 +168,28 @@
             },
             computed:
             {
+                eventTimespan: function()
+                {
+                    return this.timespans.find( t => this.eventSeconds( t ) != null ) || null
+                },
+                eventTime: function()
+                {
+                    // Seconds into the combined timeline; needs every clip's length.
+                    if ( this.timespans.some( t => !t.loaded ) ) return null
+
+                    var startTime = 0
+
+                    for ( var timespan of this.timespans )
+                    {
+                        var seconds = this.eventSeconds( timespan )
+
+                        if ( seconds != null ) return startTime + seconds
+
+                        startTime += timespan.duration
+                    }
+
+                    return null
+                },
                 duration: function()
                 {
                     if ( !this.timespans || this.timespans.length < 1 ) return 0
@@ -314,6 +336,55 @@
 
                     alert( "Copied folder path to clipboard" )
                 },
+                eventSeconds: function( timespan )
+                {
+                    // Seconds into this clip where event.json says the event happened, or null.
+                    // The event belongs to the last clip starting at or before it. If it falls
+                    // after that clip's footage ends (e.g. a Saved clip tapped a moment after the
+                    // last file), it snaps to the end.
+                    if ( !this.eventMeta || !this.eventMeta.timestamp || !timespan ) return null
+
+                    var eventDate = new Date( this.eventMeta.timestamp )
+                    var start = new Date( timespan.time )
+
+                    if ( isNaN( eventDate ) || isNaN( start ) || eventDate < start ) return null
+
+                    var next = this.timespans[ this.timespans.indexOf( timespan ) + 1 ]
+
+                    if ( next && eventDate >= new Date( next.time ) ) return null
+
+                    var offset = ( eventDate - start ) / 1000
+
+                    return timespan.duration ? Math.min( offset, timespan.duration ) : offset
+                },
+                markerStyle: function( seconds, duration )
+                {
+                    // The range thumb's centre runs from half a thumb (0.5rem) in from each end;
+                    // .custom-range is 98% wide (app.css).
+                    var fraction = Math.min( Math.max( seconds / duration, 0 ), 1 )
+
+                    return { left: `calc( 0.5rem + ( 98% - 1rem ) * ${fraction} )` }
+                },
+                jumpToEvent: function()
+                {
+                    if ( this.combineClips )
+                    {
+                        if ( this.eventTime == null ) return
+
+                        this.controls.playing = false
+                        this.currentTime = this.eventTime
+
+                        return
+                    }
+
+                    var timespan = this.eventTimespan
+
+                    if ( !timespan ) return
+
+                    this.scrubInput( timespan )
+                    timespan.visible = true
+                    timespan.currentTime = this.eventSeconds( timespan )
+                },
                 timespanTime: function( timespan )
                 {
                     if ( !timespan ) return null
@@ -454,7 +525,7 @@
                 }
             },
             template:
-                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" crossorigin="anonymous" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" @error="mediaError" title="Open in file explorer" @click="openExternal" @canplaythrough="loaded" playsinline></video>`,
+                `<video ref="video" class="video" :class="view.camera" :src="view.file" :autoplay="timespan.playing" :playbackRate.prop="playbackRate" crossorigin="anonymous" @durationchange="durationChanged" @timeupdate="timeChanged" @ended="ended" @error="mediaError" title="Open in file explorer" @click="openExternal" @canplaythrough="loaded" @loadedmetadata="metadataLoaded" playsinline></video>`,
             watch:
             {
                 "timespan.playing":
@@ -545,6 +616,15 @@
                 loaded: function( event )
                 {
                     this.timespan.loaded = true
+                },
+                metadataLoaded: function( event )
+                {
+                    // Start at the clip's scrub position, which may have been set before this
+                    // video existed (e.g. "Jump to event" on a collapsed clip).
+                    var video = event.target
+                    var time = this.timespan.currentTime - ( this.timespan.duration - video.duration )
+
+                    if ( !this.timespan.playing && isFinite( time ) && time > 0 ) video.currentTime = time
                 },
                 timeChanged: function( event )
                 {
